@@ -20,21 +20,21 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function init() {
-		add_action( 'init', array( $this, 'term_meta_color' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+	public static function init() {
+		add_action( 'init', array( __CLASS__, 'term_meta_color' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
 
 		// カラーピッカーを追加するタクソノミー.
 		$taxonomies = self::get_term_color_taxonomies();
 
 		// 該当のタクソノミー分ループ処理する.
 		foreach ( $taxonomies as $key => $value ) {
-			add_action( $value . '_add_form_fields', array( $this, 'taxonomy_add_new_meta_field_color' ), 10, 2 );
-			add_action( $value . '_edit_form_fields', array( $this, 'taxonomy_add_edit_meta_field_color' ), 10, 2 );
-			add_action( 'edited_' . $value, array( $this, 'save_term_meta_color' ), 10, 2 );
-			add_action( 'create_' . $value, array( $this, 'save_term_meta_color' ), 10, 2 );
-			add_filter( 'manage_edit-' . $value . '_columns', array( $this, 'edit_term_columns' ) );
-			add_filter( 'manage_' . $value . '_custom_column', array( $this, 'manage_term_custom_column' ), 10, 3 );
+			add_action( $value . '_add_form_fields', array( __CLASS__, 'taxonomy_add_new_meta_field_color' ), 10, 2 );
+			add_action( $value . '_edit_form_fields', array( __CLASS__, 'taxonomy_add_edit_meta_field_color' ), 10, 2 );
+			add_action( 'edited_' . $value, array( __CLASS__, 'save_term_meta_color' ), 10, 2 );
+			add_action( 'create_' . $value, array( __CLASS__, 'save_term_meta_color' ), 10, 2 );
+			add_filter( 'manage_edit-' . $value . '_columns', array( __CLASS__, 'edit_term_columns' ) );
+			add_filter( 'manage_' . $value . '_custom_column', array( __CLASS__, 'manage_term_custom_column' ), 10, 3 );
 		}
 	}
 
@@ -44,7 +44,7 @@ class VkTermColor {
 	 * @return void
 	 */
 	public static function term_meta_color() {
-		register_meta( 'term', 'term_color', array( $this, 'sanitize_hex' ) );
+		register_meta( 'term', 'term_color', array( __CLASS__, 'sanitize_hex' ) );
 	}
 
 	/**
@@ -131,7 +131,7 @@ class VkTermColor {
 
 		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_script( 'wp-color-picker' );
-		add_action( 'admin_footer', array( $this, 'term_colors_print_scripts' ) );
+		add_action( 'admin_footer', array( __CLASS__, 'term_colors_print_scripts' ) );
 	}
 
 	/**
