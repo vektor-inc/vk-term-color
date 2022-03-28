@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.0.1
+ * @version 0.1.0
  */
 
 namespace VektorInc\VK_Term_Color;
@@ -241,7 +241,16 @@ class VkTermColor {
 			$outer_class = ' class="' . esc_attr( $args['class'] ) . '"';
 		}
 
-		$taxonomies             = get_the_taxonomies();
+		$taxonomies = get_the_taxonomies();
+		$exclusion  = array( 'post_tag', 'product_type' );
+		// * vk_exclude_term_list is used in lightning too.
+		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
+		if ( is_array( $exclusion ) ) {
+			foreach ( $exclusion as $key => $value ) {
+				unset( $taxonomies[ $key ] );
+			}
+		}
+
 		$single_term_with_color = '';
 		if ( $taxonomies ) :
 			// get $taxonomy name.
