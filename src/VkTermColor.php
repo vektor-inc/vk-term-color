@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.2.0
+ * @version 0.3.0
  */
 
 namespace VektorInc\VK_Term_Color;
