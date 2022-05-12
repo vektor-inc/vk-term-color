@@ -1,11 +1,11 @@
 <?php //phpcs:ignore
 /**
- * VK_Term_Color
+ * VkTermColor
  *
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.1.0
+ * @version 0.2.0
  */
 
 namespace VektorInc\VK_Term_Color;
@@ -70,7 +70,7 @@ class VkTermColor {
 		<div class="form-field">
 			<?php wp_nonce_field( basename( __FILE__ ), 'term_color_nonce' ); ?>
 					<label for="term_color">
-						<?php _e( 'Color', 'lightning' ); ?></label>
+						<?php esc_html_e( 'Color', 'vk-term-color' ); ?></label>
 					<input type="text" name="term_color" id="term_color" class="term_color" value="">
 		</div>
 		<?php
@@ -88,10 +88,10 @@ class VkTermColor {
 		$term_color = self::get_term_color( $term->term_id );
 		?>
 			<tr class="form-field">
-			<th scope="row" valign="top"><label for="term_color"><?php _e( 'Color', 'lightning' ); ?></label></th>
+			<th scope="row" valign="top"><label for="term_color"><?php esc_html_e( 'Color', 'vk-term-color' ); ?></label></th>
 				<td>
 			<?php wp_nonce_field( basename( __FILE__ ), 'term_color_nonce' ); ?>
-					<input type="text" name="term_color" id="term_color" class="term_color" value="<?php echo $term_color; ?>">
+					<input type="text" name="term_color" id="term_color" class="term_color" value="<?php echo esc_attr( $term_color ); ?>">
 				</td>
 			</tr>
 			<?php
@@ -106,14 +106,14 @@ class VkTermColor {
 	 */
 	public static function save_term_meta_color( $term_id ) {
 
-		if ( ! isset( $_POST['term_color_nonce'] ) || ! wp_verify_nonce( $_POST['term_color_nonce'], basename( __FILE__ ) ) ) {
+		if ( ! isset( $_POST['term_color_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['term_color_nonce'] ) ), basename( __FILE__ ) ) ) {
 			return;
 		}
 
 		if ( isset( $_POST['term_color'] ) ) {
 			$now_value = get_term_meta( $term_id, 'term_color', true );
-			$new_value = $_POST['term_color'];
-			if ( $now_value != $new_value ) {
+			$new_value = sanitize_text_field( wp_unslash( $_POST['term_color'] ) );
+			if ( $now_value !== $new_value ) {
 				update_term_meta( $term_id, 'term_color', $new_value );
 			} else {
 				add_term_meta( $term_id, 'term_color', $new_value );
@@ -171,7 +171,7 @@ class VkTermColor {
 	 */
 	public static function edit_term_columns( $columns ) {
 
-		$columns['color'] = __( 'Color', 'lightning' );
+		$columns['color'] = __( 'Color', 'vk-term-color' );
 
 		return $columns;
 	}
@@ -225,22 +225,29 @@ class VkTermColor {
 	 * @param array  $args .
 	 * @return string $html .
 	 */
-	public static function get_single_term_html( $term, $args = array() ) {
+	public static function get_post_single_term_html( $term, $args = array() ) {
 
 		$args_default = array(
-			'class' => '',
-			'link'  => false,
-			'color' => true,
+			'single_element'     => '',
+			'single_class'       => '',
+			'single_inner_class' => 'btn',
+			'link'               => false,
+			'color'              => true,
+			'gap'                => '',
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
-		$class = '';
-		if ( ! empty( $args['class'] ) ) {
-			$class = ' class="' . esc_attr( $args['class'] ) . '"';
+		$single_class = '';
+		if ( ! empty( $args['single_class'] ) ) {
+			$single_class = ' class="' . esc_attr( $args['single_class'] ) . '"';
+		}
+		$single_inner_class = '';
+		if ( ! empty( $args['single_inner_class'] ) ) {
+			$single_inner_class = ' class="' . esc_attr( $args['single_inner_class'] ) . '"';
 		}
 
 		$term_name = esc_html( $term->name );
-		$term_url  = esc_url( get_term_link( $term->term_id, $taxonomy ) );
+		$term_url  = esc_url( get_term_link( $term ) );
 
 		if ( $args['color'] ) {
 			$term_color = self::get_term_color( $term->term_id );
@@ -250,10 +257,15 @@ class VkTermColor {
 		}
 
 		$single_term_html = '';
+
+		if ( ! empty( $args['single_element'] ) ) {
+			$single_term_html .= '<' . $args['single_element'] . $single_class . '>';
+		}
+
 		if ( $args['link'] ) {
-			$single_term_html .= '<a' . $class . $term_color . ' href="' . esc_url( $term_url ) . '">';
+			$single_term_html .= '<a' . $single_inner_class . $term_color . ' href="' . esc_url( $term_url ) . '">';
 		} else {
-			$single_term_html .= '<span' . $class . $term_color . '>';
+			$single_term_html .= '<span' . $single_inner_class . $term_color . '>';
 		}
 
 		$single_term_html .= $term_name;
@@ -264,6 +276,10 @@ class VkTermColor {
 			$single_term_html .= '</span>';
 		}
 
+		if ( ! empty( $args['single_element'] ) ) {
+			$single_term_html .= '</' . $args['single_element'] . '>';
+		}
+
 		return $single_term_html;
 	}
 
@@ -272,16 +288,18 @@ class VkTermColor {
 	 *
 	 * @param object $post .
 	 * @param array  $args .
-	 * @return void .
+	 * @return string .
 	 */
-	public static function get_auto_single_term_html( $post = '', $args = array() ) {
+	public static function get_auto_post_single_term_html( $post = '', $args = array() ) {
 		if ( ! $post ) {
 			global $post;
 		}
 
 		$args_default = array(
-			'class' => '',
-			'link'  => false,
+			'single_element'     => '',
+			'single_class'       => '',
+			'single_inner_class' => 'btn',
+			'link'               => false,
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
@@ -301,18 +319,18 @@ class VkTermColor {
 			$taxonomy = key( $taxonomies );
 			$terms    = get_the_terms( $post->ID, $taxonomy );
 			if ( ! empty( $terms[0] ) ) {
-				$single_term_with_color = self::get_single_term_html( $terms[0], $args );
+				$single_term_with_color = self::get_post_single_term_html( $terms[0], $args );
 			}
 		}
 		return $single_term_with_color;
 	}
 
 	/**
-	 *  自動で単一のTermのhtmlを取得
+	 *  互換 : 自動で単一のTermのhtmlを取得
 	 *
 	 * @param object $post .
 	 * @param array  $args .
-	 * @return void .
+	 * @return string .
 	 */
 	public static function get_single_term_with_color( $post = '', $args = array() ) {
 		if ( ! $post ) {
@@ -320,12 +338,72 @@ class VkTermColor {
 		}
 
 		$args_default = array(
-			'class' => '',
-			'link'  => false,
+			'single_class' => '',
+			'link'         => false,
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
-		return self::get_auto_single_term_html( $post, $args );
+		return self::get_auto_post_single_term_html( $post, $args );
+
+	}
+
+	/**
+	 * Get Post terms html
+	 *
+	 * @param object $post : post object .
+	 * @param array  $args : see $args_default.
+	 * @return string
+	 */
+	public static function get_post_terms_html( $post = '', $args = array() ) {
+
+		if ( ! $post ) {
+			global $post;
+		}
+
+		$args_default = array(
+			'outer_element'      => 'div',
+			'outer_class'        => '',
+			'single_element'     => '',
+			'single_class'       => '',
+			'single_inner_class' => 'btn',
+			'link'               => false,
+			'taxonomy'           => false,
+			'gap'                => '',
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
+		// タクソノミー指定がない場合に自動検出.
+		if ( empty( $args['taxonomy'] ) ) {
+			$taxonomies = get_the_taxonomies();
+			if ( $taxonomies ) {
+				// get $taxonomy name.
+				$taxonomy = key( $taxonomies );
+			}
+		} else {
+			$taxonomy = $args['taxonomy'];
+		}
+
+		$terms = get_the_terms( $post->ID, $taxonomy );
+
+		$outer_class = '';
+		if ( ! empty( $args['outer_class'] ) ) {
+			$outer_class = ' class="' . $args['outer_class'] . '"';
+		}
+
+		$style = '';
+		if ( ! empty( $args['gap'] ) ) {
+			$style = ' style="display:flex;gap:' . $args['gap'] . ';"';
+		}
+
+		$post_terms_html = '<' . $args['outer_element'] . $outer_class . $style . '>';
+
+		foreach ( $terms as $term ) {
+			$post_terms_html .= self::get_post_single_term_html( $term, $args );
+		}
+
+		$post_terms_html .= '</' . $args['outer_element'] . $outer_class . '>';
+
+		return $post_terms_html;
 
 	}
 
