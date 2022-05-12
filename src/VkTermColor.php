@@ -369,6 +369,7 @@ class VkTermColor {
 			'link'               => false,
 			'taxonomy'           => false,
 			'gap'                => '',
+			'separator'          => '',
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
@@ -397,8 +398,13 @@ class VkTermColor {
 
 		$post_terms_html = '<' . $args['outer_element'] . $outer_class . $style . '>';
 
+		$count = 0;
 		foreach ( $terms as $term ) {
+			if ( ! empty( $args['separator'] ) && $count > 0 ) {
+				$post_terms_html .= $args['separator'];
+			}
 			$post_terms_html .= self::get_post_single_term_html( $term, $args );
+			$count++;
 		}
 
 		$post_terms_html .= '</' . $args['outer_element'] . $outer_class . '>';
