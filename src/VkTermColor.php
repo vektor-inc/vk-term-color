@@ -219,7 +219,96 @@ class VkTermColor {
 	}
 
 	/**
-	 *  Termのカラーを取得
+	 * Term 一つ分のHTMLを出力
+	 *
+	 * @param object $term .
+	 * @param array  $args .
+	 * @return string $html .
+	 */
+	public static function get_single_term_html( $term, $args = array() ) {
+
+		$args_default = array(
+			'class' => '',
+			'link'  => false,
+			'color' => true,
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
+		$class = '';
+		if ( ! empty( $args['class'] ) ) {
+			$class = ' class="' . esc_attr( $args['class'] ) . '"';
+		}
+
+		$term_name = esc_html( $term->name );
+		$term_url  = esc_url( get_term_link( $term->term_id, $taxonomy ) );
+
+		if ( $args['color'] ) {
+			$term_color = self::get_term_color( $term->term_id );
+			$term_color = ( $term_color ) ? ' style="color:#fff;background-color:' . $term_color . '"' : '';
+		} else {
+			$term_color = '';
+		}
+
+		$single_term_html = '';
+		if ( $args['link'] ) {
+			$single_term_html .= '<a' . $class . $term_color . ' href="' . esc_url( $term_url ) . '">';
+		} else {
+			$single_term_html .= '<span' . $class . $term_color . '>';
+		}
+
+		$single_term_html .= $term_name;
+
+		if ( $args['link'] ) {
+			$single_term_html .= '</a>';
+		} else {
+			$single_term_html .= '</span>';
+		}
+
+		return $single_term_html;
+	}
+
+	/**
+	 *  自動で単一のTermのhtmlを取得
+	 *
+	 * @param object $post .
+	 * @param array  $args .
+	 * @return void .
+	 */
+	public static function get_auto_single_term_html( $post = '', $args = array() ) {
+		if ( ! $post ) {
+			global $post;
+		}
+
+		$args_default = array(
+			'class' => '',
+			'link'  => false,
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
+		$taxonomies = get_the_taxonomies();
+		$exclusion  = array( 'post_tag', 'product_type' );
+		// * vk_exclude_term_list is used in lightning too.
+		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
+		if ( is_array( $exclusion ) ) {
+			foreach ( $exclusion as $key => $value ) {
+				unset( $taxonomies[ $value ] );
+			}
+		}
+
+		$single_term_with_color = '';
+		if ( $taxonomies ) {
+			// get $taxonomy name.
+			$taxonomy = key( $taxonomies );
+			$terms    = get_the_terms( $post->ID, $taxonomy );
+			if ( ! empty( $terms[0] ) ) {
+				$single_term_with_color = self::get_single_term_html( $terms[0], $args );
+			}
+		}
+		return $single_term_with_color;
+	}
+
+	/**
+	 *  自動で単一のTermのhtmlを取得
 	 *
 	 * @param object $post .
 	 * @param array  $args .
@@ -236,50 +325,8 @@ class VkTermColor {
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
-		$outer_class = '';
-		if ( ! empty( $args['class'] ) ) {
-			$outer_class = ' class="' . esc_attr( $args['class'] ) . '"';
-		}
+		return self::get_auto_single_term_html( $post, $args );
 
-		$taxonomies = get_the_taxonomies();
-		$exclusion  = array( 'post_tag', 'product_type' );
-		// * vk_exclude_term_list is used in lightning too.
-		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
-		if ( is_array( $exclusion ) ) {
-			foreach ( $exclusion as $key => $value ) {
-				unset( $taxonomies[ $key ] );
-			}
-		}
-
-		$single_term_with_color = '';
-		if ( $taxonomies ) :
-			// get $taxonomy name.
-			$taxonomy = key( $taxonomies );
-			$terms    = get_the_terms( $post->ID, $taxonomy );
-			if ( ! $terms ) {
-				return;
-			}
-			$term_name  = esc_html( $terms[0]->name );
-			$term_url   = esc_url( get_term_link( $terms[0]->term_id, $taxonomy ) );
-			$term_color = self::get_term_color( $terms[0]->term_id );
-			$term_color = ( $term_color ) ? ' style="color:#fff;background-color:' . $term_color . '"' : '';
-
-			if ( $args['link'] ) {
-				$single_term_with_color .= '<a' . $outer_class . $term_color . ' href="' . esc_url( $term_url ) . '">';
-			} else {
-				$single_term_with_color .= '<span' . $outer_class . $term_color . '>';
-			}
-
-			$single_term_with_color .= $term_name;
-
-			if ( $args['link'] ) {
-				$single_term_with_color .= '</a>';
-			} else {
-				$single_term_with_color .= '</span>';
-			}
-
-			endif;
-		return $single_term_with_color;
 	}
 
 	/**
