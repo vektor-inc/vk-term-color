@@ -367,7 +367,7 @@ class VkTermColor {
 			'single_class'       => '',
 			'single_inner_class' => 'btn',
 			'link'               => false,
-			'taxonomy'           => false,
+			'taxonomy'           => '',
 			'gap'                => '',
 			'separator'          => '',
 		);
