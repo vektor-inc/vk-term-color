@@ -230,10 +230,9 @@ class VkTermColor {
 		$args_default = array(
 			'single_element'     => '',
 			'single_class'       => '',
-			'single_inner_class' => 'btn',
+			'single_inner_class' => 'btn btn-sm',
 			'link'               => false,
 			'color'              => true,
-			'gap'                => '',
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
@@ -298,8 +297,9 @@ class VkTermColor {
 		$args_default = array(
 			'single_element'     => '',
 			'single_class'       => '',
-			'single_inner_class' => 'btn',
+			'single_inner_class' => 'btn btn-sm',
 			'link'               => false,
+			'color'              => true,
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
@@ -338,8 +338,11 @@ class VkTermColor {
 		}
 
 		$args_default = array(
-			'single_class' => '',
-			'link'         => false,
+			'single_element'     => '',
+			'single_class'       => '',
+			'single_inner_class' => 'btn btn-sm',
+			'link'               => false,
+			'color'              => true,
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
@@ -365,8 +368,9 @@ class VkTermColor {
 			'outer_class'        => '',
 			'single_element'     => '',
 			'single_class'       => '',
-			'single_inner_class' => 'btn',
+			'single_inner_class' => 'btn btn-sm',
 			'link'               => false,
+			'color'              => true,
 			'taxonomy'           => '',
 			'gap'                => '',
 			'separator'          => '',
