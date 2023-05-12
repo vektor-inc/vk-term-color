@@ -46,8 +46,10 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function set_text_domain( $textdomain ) {
-		$this->textdomain = $textdomain;
+	public function init( $textdomain = null ) {
+		if ( ! is_null( $textdomain ) ) {
+			$this->textdomain = $textdomain;
+		}
 		add_action( 'init', array( $this, 'term_meta_color' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 
