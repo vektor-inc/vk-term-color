@@ -52,6 +52,9 @@ class VkTermColor {
 		if ( class_exists( 'Vk_term_color' ) ) {
 			return;
 		}
+		
+		class_alias( '\VektorInc\VK_Term_Color\VkTermColor', '\Vk_term_color' );
+
 		if ( ! is_null( $textdomain ) ) {
 			$this->textdomain = $textdomain;
 		}
@@ -70,11 +73,6 @@ class VkTermColor {
 			add_filter( 'manage_edit-' . $value . '_columns', array( $this, 'edit_term_columns' ) );
 			add_filter( 'manage_' . $value . '_custom_column', array( $this, 'manage_term_custom_column' ), 10, 3 );
 		}
-
-		if ( ! class_exists( 'Vk_term_color' ) ) {
-			class_alias( '\VektorInc\VK_Term_Color\VkTermColor', '\Vk_term_color' );
-		}
-		
 	}
 
 	/**
