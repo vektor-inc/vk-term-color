@@ -47,7 +47,7 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function init( $textdomain = null ) {
+	public function initialize( $textdomain = null ) {
 
 		if ( class_exists( 'Vk_term_color' ) ) {
 			return;
