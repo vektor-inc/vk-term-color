@@ -8,6 +8,7 @@
  * @version 0.4.0
  */
 
+
 namespace VektorInc\VK_Term_Color;
 
 /**
@@ -47,6 +48,10 @@ class VkTermColor {
 	 * @return void
 	 */
 	public function init( $textdomain = null ) {
+
+		if ( class_exists( 'Vk_term_color' ) ) {
+			return;
+		}
 		if ( ! is_null( $textdomain ) ) {
 			$this->textdomain = $textdomain;
 		}
@@ -65,6 +70,11 @@ class VkTermColor {
 			add_filter( 'manage_edit-' . $value . '_columns', array( $this, 'edit_term_columns' ) );
 			add_filter( 'manage_' . $value . '_custom_column', array( $this, 'manage_term_custom_column' ), 10, 3 );
 		}
+
+		if ( ! class_exists( 'Vk_term_color' ) ) {
+			class_alias( '\VektorInc\VK_Term_Color\VkTermColor', '\Vk_term_color' );
+		}
+		
 	}
 
 	/**
@@ -117,7 +127,7 @@ class VkTermColor {
 		$term_color = self::get_term_color( $term->term_id );
 		?>
 			<tr class="form-field">
-			<th scope="row" valign="top"><label for="term_color"><?php esc_html_e( 'Color', $this->textdomain ); ?></label></th>
+			<th scope="row" valign="top"><label for="term_color"><?php esc_html_e( 'Color1', $this->textdomain ); ?></label></th>
 				<td>
 			<?php wp_nonce_field( basename( __FILE__ ), 'term_color_nonce' ); ?>
 					<input type="text" name="term_color" id="term_color" class="term_color" value="<?php echo esc_attr( $term_color ); ?>">
