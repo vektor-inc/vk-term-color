@@ -11,7 +11,7 @@ use VektorInc\VK_Term_Color\VkTermColor;
 
 // カラーピッカー使用時のみ
 $vk_term_color = VkTermColor::get_instance();
-$vk_term_color->init( 'text_domain' ); 
+$vk_term_color->initialize( 'text_domain' ); 
 
 
 // 表示用のHTMLを取得する
