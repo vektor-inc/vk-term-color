@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.5.0
+ * @version 0.6.0
  */
 
 
@@ -24,13 +24,6 @@ class VkTermColor {
 	private static $instance;
 
 	/**
-	 * Text Domain
-	 *
-	 * @var string
-	 */
-	private $textdomain = 'vk-term-color';
-
-	/**
 	 * Constructor
 	 */
 	private function __construct() {}
@@ -47,7 +40,7 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function initialize( $textdomain = null ) {
+	public function init() {
 
 		if ( class_exists( 'Vk_term_color' ) ) {
 			return;
@@ -55,9 +48,9 @@ class VkTermColor {
 		
 		class_alias( '\VektorInc\VK_Term_Color\VkTermColor', '\Vk_term_color' );
 
-		if ( ! is_null( $textdomain ) ) {
-			$this->textdomain = $textdomain;
-		}
+		$locale = ( is_admin() && function_exists('get_user_locale') ) ? get_user_locale() : get_locale();
+		load_textdomain( 'vk-term-color', dirname( __FILE__ ) . '/languages/' . 'vk-term-color-' . $locale. '.mo' );		
+
 		add_action( 'init', array( $this, 'term_meta_color' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 
@@ -107,7 +100,7 @@ class VkTermColor {
 		<div class="form-field">
 			<?php wp_nonce_field( basename( __FILE__ ), 'term_color_nonce' ); ?>
 					<label for="term_color">
-						<?php esc_html_e( 'Color', $this->textdomain ); ?></label>
+						<?php esc_html_e( 'Color', 'vk-term-color' ); ?></label>
 					<input type="text" name="term_color" id="term_color" class="term_color" value="">
 		</div>
 		<?php
@@ -125,7 +118,7 @@ class VkTermColor {
 		$term_color = self::get_term_color( $term->term_id );
 		?>
 			<tr class="form-field">
-			<th scope="row" valign="top"><label for="term_color"><?php esc_html_e( 'Color1', $this->textdomain ); ?></label></th>
+			<th scope="row" valign="top"><label for="term_color"><?php esc_html_e( 'Color', 'vk-term-color' ); ?></label></th>
 				<td>
 			<?php wp_nonce_field( basename( __FILE__ ), 'term_color_nonce' ); ?>
 					<input type="text" name="term_color" id="term_color" class="term_color" value="<?php echo esc_attr( $term_color ); ?>">
@@ -208,7 +201,7 @@ class VkTermColor {
 	 */
 	public function edit_term_columns( $columns ) {
 
-		$columns['color'] = __( 'Color', $this->textdomain );
+		$columns['color'] = __( 'Color', 'vk-term-color' );
 
 		return $columns;
 	}
