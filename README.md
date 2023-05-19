@@ -9,9 +9,9 @@ composer require vektor-inc/vk-term-color
 ```
 use VektorInc\VK_Term_Color\VkTermColor;
 
-// カラーピッカー使用時のみ
+// カラーピッカー使用時
 $vk_term_color = VkTermColor::get_instance();
-$vk_term_color->initialize( 'text_domain' ); 
+VkTermColor::init(); 
 
 
 // 表示用のHTMLを取得する
