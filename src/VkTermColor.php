@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.6.1
+ * @version 0.6.2
  */
 
 
@@ -16,31 +16,13 @@ namespace VektorInc\VK_Term_Color;
  */
 class VkTermColor {
 
-	/**
-	 * Singleton instance
-	 *
-	 * @var VkTermColor
-	 */
-	private static $instance;
 
 	/**
-	 * Constructor
-	 */
-	private function __construct() {}
-
-	public static function get_instance() {
-        if ( null === self::$instance ) {
-            self::$instance = new VkTermColor();
-        }
-        return self::$instance;
-    }
-
-	/**
-	 * Init
+	 * Initthis
 	 *
 	 * @return void
 	 */
-	public function init() {
+	public static function init() {
 
 		if ( class_exists( 'Vk_term_color' ) ) {
 			return;
@@ -49,22 +31,22 @@ class VkTermColor {
 		class_alias( '\VektorInc\VK_Term_Color\VkTermColor', '\Vk_term_color' );
 
 		$locale = ( is_admin() && function_exists('get_user_locale') ) ? get_user_locale() : get_locale();
-		load_textdomain( 'vk-term-color', dirname( __FILE__ ) . '/languages/' . 'vk-term-color-' . $locale. '.mo' );		
-
-		add_action( 'init', array( $this, 'term_meta_color' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+		load_textdomain( 'vk-term-color', dirname( __FILE__ ) . '/languages/' . 'vk-term-color-' . $locale. '.mo' );
+		
+		add_action( 'init', array( __CLASS__, 'term_meta_color' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
 
 		// カラーピッカーを追加するタクソノミー.
 		$taxonomies = self::get_term_color_taxonomies();
 
 		// 該当のタクソノミー分ループ処理する.
 		foreach ( $taxonomies as $key => $value ) {
-			add_action( $value . '_add_form_fields', array( $this, 'taxonomy_add_new_meta_field_color' ), 10, 2 );
-			add_action( $value . '_edit_form_fields', array( $this, 'taxonomy_add_edit_meta_field_color' ), 10, 2 );
-			add_action( 'edited_' . $value, array( $this, 'save_term_meta_color' ), 10, 2 );
-			add_action( 'create_' . $value, array( $this, 'save_term_meta_color' ), 10, 2 );
-			add_filter( 'manage_edit-' . $value . '_columns', array( $this, 'edit_term_columns' ) );
-			add_filter( 'manage_' . $value . '_custom_column', array( $this, 'manage_term_custom_column' ), 10, 3 );
+			add_action( $value . '_add_form_fields', array( __CLASS__, 'taxonomy_add_new_meta_field_color' ), 10, 2 );
+			add_action( $value . '_edit_form_fields', array( __CLASS__, 'taxonomy_add_edit_meta_field_color' ), 10, 2 );
+			add_action( 'edited_' . $value, array( __CLASS__, 'save_term_meta_color' ), 10, 2 );
+			add_action( 'create_' . $value, array( __CLASS__, 'save_term_meta_color' ), 10, 2 );
+			add_filter( 'manage_edit-' . $value . '_columns', array( __CLASS__, 'edit_term_columns' ) );
+			add_filter( 'manage_' . $value . '_custom_column', array( __CLASS__, 'manage_term_custom_column' ), 10, 3 );
 		}
 	}
 
@@ -73,8 +55,8 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function term_meta_color() {
-		register_meta( 'term', 'term_color', array( 'sanitize_callback', array( $this, 'sanitize_hex' ) ) );
+	public static function term_meta_color() {
+		register_meta( 'term', 'term_color', array( 'sanitize_callback', array( __CLASS__, 'sanitize_hex' ) ) );
 	}
 
 	/**
@@ -83,7 +65,7 @@ class VkTermColor {
 	 * @param string $color color data.
 	 * @return string $color
 	 */
-	public function sanitize_hex( $color ) {
+	public static function sanitize_hex( $color ) {
 		// sanitize_hex_color() は undefined function くらう.
 		$color = ltrim( $color, '#' );
 		return preg_match(  '/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color ) ? $color : '';
@@ -94,7 +76,7 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function taxonomy_add_new_meta_field_color() {
+	public static function taxonomy_add_new_meta_field_color() {
 		// this will add the custom meta field to the add new term page.
 		?>
 		<div class="form-field">
@@ -112,7 +94,7 @@ class VkTermColor {
 	 * @param object $term : term object.
 	 * @return void
 	 */
-	public function taxonomy_add_edit_meta_field_color( $term ) {
+	public static function taxonomy_add_edit_meta_field_color( $term ) {
 
 		// put the term ID into a variable.
 		$term_color = self::get_term_color( $term->term_id );
@@ -134,7 +116,7 @@ class VkTermColor {
 	 * @param int $term_id term id.
 	 * @return void
 	 */
-	public function save_term_meta_color( $term_id ) {
+	public static function save_term_meta_color( $term_id ) {
 
 		if ( ! isset( $_POST['term_color_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['term_color_nonce'] ) ), basename( __FILE__ ) ) ) {
 			return;
@@ -157,11 +139,11 @@ class VkTermColor {
 	 * @param string $hook_suffix : page slug.
 	 * @return void
 	 */
-	public function admin_enqueue_scripts( $hook_suffix ) {
+	public static function admin_enqueue_scripts( $hook_suffix ) {
 
 		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_script( 'wp-color-picker' );
-		add_action( 'admin_footer', array( $this, 'term_colors_print_scripts' ) );
+		add_action( 'admin_footer', array( __CLASS__, 'term_colors_print_scripts' ) );
 	}
 
 	/**
@@ -169,7 +151,7 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function term_colors_print_styles() {
+	public static function term_colors_print_styles() {
 		?>
 			<style type="text/css">
 				.column-color { width: 50px; }
@@ -183,7 +165,7 @@ class VkTermColor {
 	 *
 	 * @return void
 	 */
-	public function term_colors_print_scripts() {
+	public static function term_colors_print_scripts() {
 		?>
 			<script type="text/javascript">
 				jQuery( document ).ready( function( $ ) {
@@ -199,7 +181,7 @@ class VkTermColor {
 	 * @param array $columns : column data.
 	 * @return array $columns : column data.
 	 */
-	public function edit_term_columns( $columns ) {
+	public static function edit_term_columns( $columns ) {
 
 		$columns['color'] = __( 'Color', 'vk-term-color' );
 
@@ -214,7 +196,7 @@ class VkTermColor {
 	 * @param int    $term_id : term id.
 	 * @return string $out
 	 */
-	public function manage_term_custom_column( $out, $column, $term_id ) {
+	public static function manage_term_custom_column( $out, $column, $term_id ) {
 
 		if ( 'color' === $column ) {
 
@@ -237,11 +219,10 @@ class VkTermColor {
 	 * @return string $term_color
 	 */
 	public static function get_term_color( $term_id ) {
-		$instance = self::get_instance();
 		$term_color_default = '#999999';
 		$term_color_default = apply_filters( 'term_color_default_custom', $term_color_default );
 		if ( isset( $term_id ) ) {
-			$term_color = $instance->sanitize_hex( get_term_meta( $term_id, 'term_color', true ) );
+			$term_color = self::sanitize_hex( get_term_meta( $term_id, 'term_color', true ) );
 			$term_color = ( $term_color ) ? '#' . $term_color : $term_color_default;
 		} else {
 			$term_color = $term_color_default;
