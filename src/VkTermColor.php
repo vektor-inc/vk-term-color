@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.6.3
+ * @version 0.6.4
  */
 
 
@@ -24,10 +24,12 @@ class VkTermColor {
 	 */
 	public static function init() {
 
+		// 古い（Composer版じゃない）Vk_term_color がある場合は処理しない.
 		if ( class_exists( 'Vk_term_color' ) ) {
 			return;
 		}
 
+		// 古い（Composer版じゃない）Vk_term_color が使用されている場所でも動作するようにエイリアスを作成.
 		class_alias( '\VektorInc\VK_Term_Color\VkTermColor', '\Vk_term_color' );
 
 		$locale = ( is_admin() && function_exists( 'get_user_locale' ) ) ? get_user_locale() : get_locale();
