@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.6.3
+ * @version 0.6.4
  */
 
 
@@ -24,15 +24,17 @@ class VkTermColor {
 	 */
 	public static function init() {
 
+		// 古い（Composer版じゃない）Vk_term_color がある場合は処理しない.
 		if ( class_exists( 'Vk_term_color' ) ) {
 			return;
 		}
-		
+
+		// 古い（Composer版じゃない）Vk_term_color が使用されている場所でも動作するようにエイリアスを作成.
 		class_alias( '\VektorInc\VK_Term_Color\VkTermColor', '\Vk_term_color' );
 
-		$locale = ( is_admin() && function_exists('get_user_locale') ) ? get_user_locale() : get_locale();
-		load_textdomain( 'vk-term-color', dirname( __FILE__ ) . '/languages/' . 'vk-term-color-' . $locale. '.mo' );
-		
+		$locale = ( is_admin() && function_exists( 'get_user_locale' ) ) ? get_user_locale() : get_locale();
+		load_textdomain( 'vk-term-color', dirname( __FILE__ ) . '/languages/' . 'vk-term-color-' . $locale . '.mo' );
+
 		add_action( 'init', array( __CLASS__, 'term_meta_color' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
 
@@ -68,7 +70,7 @@ class VkTermColor {
 	public static function sanitize_hex( $color ) {
 		// sanitize_hex_color() は undefined function くらう.
 		$color = ltrim( $color, '#' );
-		return preg_match(  '/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color ) ? $color : '';
+		return preg_match( '/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color ) ? $color : '';
 	}
 
 	/**
@@ -230,7 +232,7 @@ class VkTermColor {
 		return $term_color;
 	}
 
-	
+
 
 		/**
 		 * Term名とカラーを取得
@@ -239,62 +241,61 @@ class VkTermColor {
 		 * @param array  $args : setting parametor.
 		 * @return void
 		 */
-		public static function get_single_term_with_color( $post = '', $args = array() ) {
-			if ( ! $post ) {
-				global $post;
-			}
-
-			$args_default = array(
-				'class' => '',
-				'link'  => false,
-			);
-			$args         = wp_parse_args( $args, $args_default );
-
-			$outer_class = '';
-			if ( ! empty( $args['class'] ) ) {
-				$outer_class = ' class="' . esc_attr( $args['class'] ) . '"';
-			}
-
-			$taxonomies = get_the_taxonomies( $post );
-			$exclusion  = array( 'post_tag', 'product_type' );
-			// * vk_exclude_term_list is used in lightning too.
-			$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
-			if ( is_array( $exclusion ) ) {
-				foreach ( $exclusion as $key => $value ) {
-					unset( $taxonomies[ $value ] );
-				}
-			}
-
-			$single_term_with_color = '';
-			if ( $taxonomies ) {
-				// get $taxonomy name.
-				$taxonomy = apply_filters( 'vk_term_color_taxonomy', key( $taxonomies ) );
-				$terms    = get_the_terms( $post->ID, $taxonomy );
-				if ( ! $terms ) {
-					return;
-				}
-				$term_name  = esc_html( $terms[0]->name );
-				$term_url   = esc_url( get_term_link( $terms[0]->term_id, $taxonomy ) );
-				$term_color = self::get_term_color( $terms[0]->term_id );
-				$term_color = ( $term_color ) ? ' style="color:#fff;background-color:' . $term_color . '"' : '';
-
-				if ( $args['link'] ) {
-					$single_term_with_color .= '<a' . $outer_class . $term_color . ' href="' . esc_url( $term_url ) . '">';
-				} else {
-					$single_term_with_color .= '<span' . $outer_class . $term_color . '>';
-				}
-
-				$single_term_with_color .= $term_name;
-
-				if ( $args['link'] ) {
-					$single_term_with_color .= '</a>';
-				} else {
-					$single_term_with_color .= '</span>';
-				}
-
-			}
-			return apply_filters( 'vk_get_single_term_with_color', $single_term_with_color, $post, $args );
+	public static function get_single_term_with_color( $post = '', $args = array() ) {
+		if ( ! $post ) {
+			global $post;
 		}
+
+		$args_default = array(
+			'class' => '',
+			'link'  => false,
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
+		$outer_class = '';
+		if ( ! empty( $args['class'] ) ) {
+			$outer_class = ' class="' . esc_attr( $args['class'] ) . '"';
+		}
+
+		$taxonomies = get_the_taxonomies( $post );
+		$exclusion  = array( 'post_tag', 'product_type' );
+		// * vk_exclude_term_list is used in lightning too.
+		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
+		if ( is_array( $exclusion ) ) {
+			foreach ( $exclusion as $key => $value ) {
+				unset( $taxonomies[ $value ] );
+			}
+		}
+
+		$single_term_with_color = '';
+		if ( $taxonomies ) {
+			// get $taxonomy name.
+			$taxonomy = apply_filters( 'vk_term_color_taxonomy', key( $taxonomies ) );
+			$terms    = get_the_terms( $post->ID, $taxonomy );
+			if ( ! $terms ) {
+				return;
+			}
+			$term_name  = esc_html( $terms[0]->name );
+			$term_url   = esc_url( get_term_link( $terms[0]->term_id, $taxonomy ) );
+			$term_color = self::get_term_color( $terms[0]->term_id );
+			$term_color = ( $term_color ) ? ' style="color:#fff;background-color:' . $term_color . '"' : '';
+
+			if ( $args['link'] ) {
+				$single_term_with_color .= '<a' . $outer_class . $term_color . ' href="' . esc_url( $term_url ) . '">';
+			} else {
+				$single_term_with_color .= '<span' . $outer_class . $term_color . '>';
+			}
+
+			$single_term_with_color .= $term_name;
+
+			if ( $args['link'] ) {
+				$single_term_with_color .= '</a>';
+			} else {
+				$single_term_with_color .= '</span>';
+			}
+		}
+		return apply_filters( 'vk_get_single_term_with_color', $single_term_with_color, $post, $args );
+	}
 
 
 
