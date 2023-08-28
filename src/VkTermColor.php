@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.6.5
+ * @version 0.6.6
  */
 
 namespace VektorInc\VK_Term_Color;
@@ -453,10 +453,10 @@ class VkTermColor {
 		}
 
 		$terms = get_the_terms( $post->ID, $taxonomy );
-		if ( ! $terms ) {
+		if ( is_wp_error( $terms ) || ! $terms) {
 			return;
 		}
-		
+
 		$outer_class = '';
 		if ( ! empty( $args['outer_class'] ) ) {
 			$outer_class = ' class="' . $args['outer_class'] . '"';
