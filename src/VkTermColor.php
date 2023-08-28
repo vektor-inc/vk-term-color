@@ -5,9 +5,8 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.6.4
+ * @version 0.6.5
  */
-
 
 namespace VektorInc\VK_Term_Color;
 
@@ -232,15 +231,124 @@ class VkTermColor {
 		return $term_color;
 	}
 
+	/**
+	 * Term 一つ分のHTMLを出力
+	 * 対象のタームを指定して出力したい場合に使用します。
+	 *
+	 * @param object $term .
+	 * @param array  $args .
+	 * @return string $html .
+	 */
+	public static function get_post_single_term_html( $term, $args = array() ) {
 
+		$args_default = array(
+			'single_element'     => '',
+			'single_class'       => '',
+			'single_inner_class' => 'btn btn-sm',
+			'link'               => false,
+			'color'              => true,
+		);
+		$args         = wp_parse_args( $args, $args_default );
 
-		/**
-		 * Term名とカラーを取得
-		 *
-		 * @param object $post : post object.
-		 * @param array  $args : setting parametor.
-		 * @return void
-		 */
+		$single_class = '';
+		if ( ! empty( $args['single_class'] ) ) {
+			$single_class = ' class="' . esc_attr( $args['single_class'] ) . '"';
+		}
+		$single_inner_class = '';
+		if ( ! empty( $args['single_inner_class'] ) ) {
+			$single_inner_class = ' class="' . esc_attr( $args['single_inner_class'] ) . '"';
+		}
+
+		$term_name = esc_html( $term->name );
+		$term_url  = esc_url( get_term_link( $term ) );
+
+		if ( $args['color'] ) {
+			$term_color = self::get_term_color( $term->term_id );
+			$term_color = ( $term_color ) ? ' style="color:#fff;background-color:' . $term_color . '"' : '';
+		} else {
+			$term_color = '';
+		}
+
+		$single_term_html = '';
+
+		if ( ! empty( $args['single_element'] ) ) {
+			$single_term_html .= '<' . $args['single_element'] . $single_class . '>';
+		}
+
+		if ( $args['link'] ) {
+			$single_term_html .= '<a' . $single_inner_class . $term_color . ' href="' . esc_url( $term_url ) . '">';
+		} else {
+			$single_term_html .= '<span' . $single_inner_class . $term_color . '>';
+		}
+
+		$single_term_html .= $term_name;
+
+		if ( $args['link'] ) {
+			$single_term_html .= '</a>';
+		} else {
+			$single_term_html .= '</span>';
+		}
+
+		if ( ! empty( $args['single_element'] ) ) {
+			$single_term_html .= '</' . $args['single_element'] . '>';
+		}
+
+		return $single_term_html;
+	}
+
+	/**
+	 *  自動で単一のTermのhtmlを取得
+	 *
+	 * @param object $post .
+	 * @param array  $args .
+	 * @return string .
+	 */
+	public static function get_auto_post_single_term_html( $post = '', $args = array() ) {
+		if ( ! $post ) {
+			global $post;
+		}
+
+		$args_default = array(
+			'single_element'     => '',
+			'single_class'       => '',
+			'single_inner_class' => 'btn btn-sm',
+			'link'               => false,
+			'color'              => true,
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
+		$taxonomies = get_the_taxonomies();
+		$exclusion  = array( 'post_tag', 'product_type' );
+		// * vk_exclude_term_list is used in lightning too.
+		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
+		if ( is_array( $exclusion ) ) {
+			foreach ( $exclusion as $key => $value ) {
+				unset( $taxonomies[ $value ] );
+			}
+		}
+
+		$single_term_with_color = '';
+		if ( $taxonomies ) {
+			// get $taxonomy name.
+			$taxonomy = key( $taxonomies );
+			$terms    = get_the_terms( $post->ID, $taxonomy );
+			if ( ! empty( $terms[0] ) ) {
+				$single_term_with_color = self::get_post_single_term_html( $terms[0], $args );
+			}
+		}
+		return $single_term_with_color;
+	}
+
+	/**
+	 * Termとカラーを投稿から自動で取得する取得
+	 * 対象の taxonomy を指定したい場合はフックで指定。除外ができる
+	 * 指定 : vk_term_color_taxonomy
+	 * 除外 : vk_get_display_taxonomies_exclusion
+	 *
+	 * @param object $post : post object.
+	 * @param array  $args : setting parametor.
+	 * @return void
+	 */
 	public static function get_single_term_with_color( $post = '', $args = array() ) {
 		if ( ! $post ) {
 			global $post;
@@ -260,6 +368,7 @@ class VkTermColor {
 		$taxonomies = get_the_taxonomies( $post );
 		$exclusion  = array( 'post_tag', 'product_type' );
 		// * vk_exclude_term_list is used in lightning too.
+		// 除外するタクソノミーがある場合はフックで指定
 		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
 		if ( is_array( $exclusion ) ) {
 			foreach ( $exclusion as $key => $value ) {
@@ -270,6 +379,7 @@ class VkTermColor {
 		$single_term_with_color = '';
 		if ( $taxonomies ) {
 			// get $taxonomy name.
+			// 取得するタームのタクソノミーを指定したい場合はフックで指定
 			$taxonomy = apply_filters( 'vk_term_color_taxonomy', key( $taxonomies ) );
 			$terms    = get_the_terms( $post->ID, $taxonomy );
 			if ( ! $terms ) {
@@ -297,10 +407,9 @@ class VkTermColor {
 		return apply_filters( 'vk_get_single_term_with_color', $single_term_with_color, $post, $args );
 	}
 
-
-
 	/**
 	 * Get Post terms html
+	 * 複数のタームを表示する場合に使用
 	 *
 	 * @param object $post : post object .
 	 * @param array  $args : see $args_default.
@@ -344,7 +453,10 @@ class VkTermColor {
 		}
 
 		$terms = get_the_terms( $post->ID, $taxonomy );
-
+		if ( ! $terms ) {
+			return;
+		}
+		
 		$outer_class = '';
 		if ( ! empty( $args['outer_class'] ) ) {
 			$outer_class = ' class="' . $args['outer_class'] . '"';
