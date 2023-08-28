@@ -233,6 +233,7 @@ class VkTermColor {
 
 	/**
 	 * Term 一つ分のHTMLを出力
+	 * 対象のタームを指定して出力したい場合に使用します。
 	 *
 	 * @param object $term .
 	 * @param array  $args .
@@ -339,7 +340,10 @@ class VkTermColor {
 	}
 
 	/**
-	 * Term名とカラーを取得
+	 * Termとカラーを投稿から自動で取得する取得
+	 * 対象の taxonomy を指定したい場合はフックで指定。除外ができる
+	 * 指定 : vk_term_color_taxonomy
+	 * 除外 : vk_get_display_taxonomies_exclusion
 	 *
 	 * @param object $post : post object.
 	 * @param array  $args : setting parametor.
@@ -364,6 +368,7 @@ class VkTermColor {
 		$taxonomies = get_the_taxonomies( $post );
 		$exclusion  = array( 'post_tag', 'product_type' );
 		// * vk_exclude_term_list is used in lightning too.
+		// 除外するタクソノミーがある場合はフックで指定
 		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
 		if ( is_array( $exclusion ) ) {
 			foreach ( $exclusion as $key => $value ) {
@@ -374,6 +379,7 @@ class VkTermColor {
 		$single_term_with_color = '';
 		if ( $taxonomies ) {
 			// get $taxonomy name.
+			// 取得するタームのタクソノミーを指定したい場合はフックで指定
 			$taxonomy = apply_filters( 'vk_term_color_taxonomy', key( $taxonomies ) );
 			$terms    = get_the_terms( $post->ID, $taxonomy );
 			if ( ! $terms ) {
@@ -403,6 +409,7 @@ class VkTermColor {
 
 	/**
 	 * Get Post terms html
+	 * 複数のタームを表示する場合に使用
 	 *
 	 * @param object $post : post object .
 	 * @param array  $args : see $args_default.
