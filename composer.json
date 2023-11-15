@@ -13,5 +13,8 @@
             "email": "kurudrive@gmail.com"
         }
     ],
-    "require": {}
+    "require-dev": {
+		"wp-phpunit/wp-phpunit": "^5.4",
+		"yoast/phpunit-polyfills": "^1.0"
+	}
 }

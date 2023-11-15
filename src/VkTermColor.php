@@ -215,14 +215,24 @@ class VkTermColor {
 	}
 
 	/**
+	 * Termの初期色を取得
+	 *
+	 * @return string #から始まる色コード
+	 */
+	public static function get_default_color() {
+		return apply_filters( 'term_color_default_custom', '#999999' );
+	}
+
+
+	/**
 	 * Termのカラーを取得
 	 *
 	 * @param int $term_id .
 	 * @return string $term_color
 	 */
 	public static function get_term_color( $term_id ) {
-		$term_color_default = '#999999';
-		$term_color_default = apply_filters( 'term_color_default_custom', $term_color_default );
+		$term_color_default = self::get_default_color();
+
 		if ( isset( $term_id ) ) {
 			$term_color = self::sanitize_hex( get_term_meta( $term_id, 'term_color', true ) );
 			$term_color = ( $term_color ) ? '#' . $term_color : $term_color_default;
@@ -232,15 +242,60 @@ class VkTermColor {
 		return $term_color;
 	}
 
+	/**
+	 * 投稿からターム情報を取得
+	 *
+	 * @param mixed $post Post or Post ID 
+	 * @return array|null term info
+	 */
+	public static function get_post_single_term_info ($post) {
 
+		$term_color_default = self::get_default_color();
 
-		/**
-		 * Term名とカラーを取得
-		 *
-		 * @param object $post : post object.
-		 * @param array  $args : setting parametor.
-		 * @return void
-		 */
+		// 結果を格納する配列
+		$results = null;
+	
+		// 投稿に紐付けられたすべてのタクソノミーを取得
+		$taxonomies = get_post_taxonomies($post);
+
+		// 各タクソノミーについてループ
+		foreach ($taxonomies as $taxonomy) {
+			// 投稿に紐付けられたタームを取得
+			$terms = get_the_terms($post, $taxonomy);
+	
+			// タームが存在する場合のみ処理
+			if ($terms && !is_wp_error($terms)) {
+				// 最初のタームを使用
+				$term = $terms[0];
+	
+				// タームのメタデータから色を取得
+				$color = get_term_meta($term->term_id, 'term_color', true);
+				$color = $color ? $color : $term_color_default;
+
+				// タームのURLを取得
+				$term_url = get_term_link($term);
+	
+				// 結果配列に追加
+				$results = [
+					'term_name' => $term->name,
+					'color' => $color,
+					'term_url' => $term_url
+				];
+	
+				// 一つのタクソノミーのみ処理するため、ループを抜ける
+				break;
+			}
+		}
+		return $results;
+	}
+
+	/**
+	 * Term名とカラーを取得
+	 *
+	 * @param object $post : post object.
+	 * @param array  $args : setting parametor.
+	 * @return void
+	 */
 	public static function get_single_term_with_color( $post = '', $args = array() ) {
 		if ( ! $post ) {
 			global $post;
