@@ -2,6 +2,7 @@
 
 ```
 composer require vektor-inc/vk-term-color
+
 ```
 
 ## Usage
@@ -28,4 +29,11 @@ $args = array(
 	'separator'          => '',
 );
 echo VkTermColor::get_post_terms_html( '', $args );
+```
+
+## PHPUnit
+```
+composer install
+npx wp-env start
+npm run phpunit
 ```
