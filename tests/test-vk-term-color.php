@@ -19,7 +19,16 @@ class VkTermColorTest extends WP_UnitTestCase {
 	 */
 	public function setUp(): void {
 		parent::setUp();
-		$catarr = array(
+    }
+    
+    /**
+     * Test case get_post_single_term_info() 
+     *
+     * @return void
+     */
+	public function test_get_post_single_term_info() {
+
+        $catarr = array(
 			'cat_name' => $this->category_name,
 		);
         $this->category_id  = wp_insert_category( $catarr );          
@@ -58,15 +67,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'term_url' => site_url() . '/?cat=1'
                 )
             )
-        );  
-    }
-    
-    /**
-     * Test case get_post_single_term_info() 
-     *
-     * @return void
-     */
-	public function test_get_post_single_term_info() {
+        );          
 
         print PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
