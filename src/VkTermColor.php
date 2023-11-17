@@ -256,6 +256,7 @@ class VkTermColor {
 	
 		// 投稿に紐付けられたすべてのタクソノミーを取得
 		$taxonomies = get_post_taxonomies($post);
+		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies,  array( 'post_tag', 'product_type' )  );
 
 		// 各タクソノミーについてループ
 		foreach ($taxonomies as $taxonomy) {
@@ -375,14 +376,8 @@ class VkTermColor {
 		$args         = wp_parse_args( $args, $args_default );
 
 		$taxonomies = get_the_taxonomies();
-		$exclusion  = array( 'post_tag', 'product_type' );
-		// * vk_exclude_term_list is used in lightning too.
-		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
-		if ( is_array( $exclusion ) ) {
-			foreach ( $exclusion as $key => $value ) {
-				unset( $taxonomies[ $value ] );
-			}
-		}
+		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies, array( 'post_tag', 'product_type' ) );
+
 
 		$single_term_with_color = '';
 		if ( $taxonomies ) {
@@ -423,15 +418,7 @@ class VkTermColor {
 		}
 
 		$taxonomies = get_the_taxonomies( $post );
-		$exclusion  = array( 'post_tag', 'product_type' );
-		// * vk_exclude_term_list is used in lightning too.
-		// 除外するタクソノミーがある場合はフックで指定
-		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
-		if ( is_array( $exclusion ) ) {
-			foreach ( $exclusion as $key => $value ) {
-				unset( $taxonomies[ $value ] );
-			}
-		}
+		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies, array( 'post_tag', 'product_type' ) );
 
 		$single_term_with_color = '';
 		if ( $taxonomies ) {
@@ -462,6 +449,19 @@ class VkTermColor {
 			}
 		}
 		return apply_filters( 'vk_get_single_term_with_color', $single_term_with_color, $post, $args );
+	}
+
+
+	public static function get_display_taxonomies_exclusion( $taxonomies, $exclusion ) {
+		// * vk_exclude_term_list is used in lightning too.
+		// 除外するタクソノミーがある場合はフックで指定		
+		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
+		if ( is_array( $exclusion ) ) {
+			foreach ( $exclusion as $key => $value ) {
+				unset( $taxonomies[ $value ] );
+			}
+		}
+		return $taxonomies;
 	}
 
 	/**
