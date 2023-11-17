@@ -363,7 +363,7 @@ class VkTermColorTest extends WP_UnitTestCase {
             "taxonomies" ... 元のタクソノミーリスト
             "filter_exclusion" ... フィルターで除外するタクソノミー
             "exclusion" ... 本メソッドの引数で除外するタクソノミー
-            "correct" ... 期待値
+            "correct" ... 期待値（フィルターは既存の除外値も残し、新たな除外値を加える前提）
          */
         $tests = array(   
             array(     
