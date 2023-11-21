@@ -247,7 +247,13 @@ class VkTermColor {
 	 * @param mixed $post Post or Post ID 
 	 * @return array|null term info
 	 */
-	public static function get_post_single_term_info ($post) {
+	public static function get_post_single_term_info( $post, $args = array() ) {
+
+		$args_default = array(
+			'taxonomy' => '',
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
 
 		$term_color_default = self::get_default_color();
 
@@ -255,35 +261,40 @@ class VkTermColor {
 		$results = null;
 	
 		// 投稿に紐付けられたすべてのタクソノミーを取得
-		$taxonomies = get_post_taxonomies($post);
+		$taxonomies = get_the_taxonomies($post);
+		
 		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies,  array( 'post_tag', 'product_type' )  );
+	
+		// タクソノミー毎の処理
+		foreach ( $taxonomies as $taxonomy_name => $v ) {
 
-		// 各タクソノミーについてループ
-		foreach ($taxonomies as $taxonomy) {
-			// 投稿に紐付けられたタームを取得
-			$terms = get_the_terms($post, $taxonomy);
-	
-			// タームが存在する場合のみ処理
-			if ($terms && !is_wp_error($terms)) {
-				// 最初のタームを使用
-				$term = $terms[0];
-	
-				// タームのメタデータから色を取得
-				$color = get_term_meta($term->term_id, 'term_color', true);
-				$color = $color ? $color : $term_color_default;
+			if ( '' === $args['taxonomy'] || $taxonomy_name === $args['taxonomy']  ) {
+			
+				// 投稿に紐付けられたタームを取得
+				$terms = get_the_terms($post, $taxonomy_name);
 
-				// タームのURLを取得
-				$term_url = get_term_link($term);
-	
-				// 結果配列に追加
-				$results = [
-					'term_name' => $term->name,
-					'color' => $color,
-					'term_url' => $term_url
-				];
-	
-				// 一つのタクソノミーのみ処理するため、ループを抜ける
-				break;
+				// タームが存在する場合のみ処理
+				if ($terms && !is_wp_error($terms)) {
+					// 最初のタームを使用
+					$term = $terms[0];
+		
+					// タームのメタデータから色を取得
+					$color = get_term_meta($term->term_id, 'term_color', true);
+					$color = $color ? $color : $term_color_default;
+
+					// タームのURLを取得
+					$term_url = get_term_link($term);
+		
+					// 結果配列に追加
+					$results = [
+						'term_name' => $term->name,
+						'color' => $color,
+						'term_url' => $term_url
+					];
+		
+					// 一つのタクソノミーのみ処理するため、ループを抜ける
+					break;
+				}
 			}
 		}
 		return $results;
@@ -457,10 +468,12 @@ class VkTermColor {
 		// 除外するタクソノミーがある場合はフックで指定		
 		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
 		if ( is_array( $exclusion ) ) {
-			foreach ( $exclusion as $key => $value ) {
+
+			foreach ( $exclusion as $value ) {
 				unset( $taxonomies[ $value ] );
 			}
 		}
+
 		return $taxonomies;
 	}
 
