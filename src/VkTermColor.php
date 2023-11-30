@@ -5,7 +5,7 @@
  * @package vektor-inc/vk-term-color
  * @license GPL-2.0+
  *
- * @version 0.6.6
+ * @version 0.7.0
  */
 
 namespace VektorInc\VK_Term_Color;
@@ -214,14 +214,24 @@ class VkTermColor {
 	}
 
 	/**
+	 * Termの初期色を取得
+	 *
+	 * @return string #から始まる色コード
+	 */
+	public static function get_default_color() {
+		return apply_filters( 'term_color_default_custom', '#999999' );
+	}
+
+
+	/**
 	 * Termのカラーを取得
 	 *
 	 * @param int $term_id .
 	 * @return string $term_color
 	 */
 	public static function get_term_color( $term_id ) {
-		$term_color_default = '#999999';
-		$term_color_default = apply_filters( 'term_color_default_custom', $term_color_default );
+		$term_color_default = self::get_default_color();
+
 		if ( isset( $term_id ) ) {
 			$term_color = self::sanitize_hex( get_term_meta( $term_id, 'term_color', true ) );
 			$term_color = ( $term_color ) ? '#' . $term_color : $term_color_default;
@@ -229,6 +239,65 @@ class VkTermColor {
 			$term_color = $term_color_default;
 		}
 		return $term_color;
+	}
+
+	/**
+	 * 投稿からターム情報を取得
+	 *
+	 * @param mixed $post Post or Post ID 
+	 * @return array|null term info
+	 */
+	public static function get_post_single_term_info( $post, $args = array() ) {
+
+		$args_default = array(
+			'taxonomy' => '',
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
+
+		$term_color_default = self::get_default_color();
+
+		// 結果を格納する配列
+		$results = null;
+	
+		// 投稿に紐付けられたすべてのタクソノミーを取得
+		$taxonomies = get_the_taxonomies($post);
+		
+		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies,  array( 'post_tag', 'product_type' )  );
+	
+		// タクソノミー毎の処理
+		foreach ( $taxonomies as $taxonomy_name => $v ) {
+
+			if ( '' === $args['taxonomy'] || $taxonomy_name === $args['taxonomy']  ) {
+			
+				// 投稿に紐付けられたタームを取得
+				$terms = get_the_terms($post, $taxonomy_name);
+
+				// タームが存在する場合のみ処理
+				if ($terms && !is_wp_error($terms)) {
+					// 最初のタームを使用
+					$term = $terms[0];
+		
+					// タームのメタデータから色を取得
+					$color = get_term_meta($term->term_id, 'term_color', true);
+					$color = $color ? $color : $term_color_default;
+
+					// タームのURLを取得
+					$term_url = get_term_link($term);
+		
+					// 結果配列に追加
+					$results = [
+						'term_name' => $term->name,
+						'color' => $color,
+						'term_url' => $term_url
+					];
+		
+					// 一つのタクソノミーのみ処理するため、ループを抜ける
+					break;
+				}
+			}
+		}
+		return $results;
 	}
 
 	/**
@@ -318,14 +387,8 @@ class VkTermColor {
 		$args         = wp_parse_args( $args, $args_default );
 
 		$taxonomies = get_the_taxonomies();
-		$exclusion  = array( 'post_tag', 'product_type' );
-		// * vk_exclude_term_list is used in lightning too.
-		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
-		if ( is_array( $exclusion ) ) {
-			foreach ( $exclusion as $key => $value ) {
-				unset( $taxonomies[ $value ] );
-			}
-		}
+		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies, array( 'post_tag', 'product_type' ) );
+
 
 		$single_term_with_color = '';
 		if ( $taxonomies ) {
@@ -366,15 +429,7 @@ class VkTermColor {
 		}
 
 		$taxonomies = get_the_taxonomies( $post );
-		$exclusion  = array( 'post_tag', 'product_type' );
-		// * vk_exclude_term_list is used in lightning too.
-		// 除外するタクソノミーがある場合はフックで指定
-		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
-		if ( is_array( $exclusion ) ) {
-			foreach ( $exclusion as $key => $value ) {
-				unset( $taxonomies[ $value ] );
-			}
-		}
+		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies, array( 'post_tag', 'product_type' ) );
 
 		$single_term_with_color = '';
 		if ( $taxonomies ) {
@@ -405,6 +460,21 @@ class VkTermColor {
 			}
 		}
 		return apply_filters( 'vk_get_single_term_with_color', $single_term_with_color, $post, $args );
+	}
+
+
+	public static function get_display_taxonomies_exclusion( $taxonomies, $exclusion ) {
+		// * vk_exclude_term_list is used in lightning too.
+		// 除外するタクソノミーがある場合はフックで指定		
+		$exclusion = apply_filters( 'vk_get_display_taxonomies_exclusion', $exclusion );
+		if ( is_array( $exclusion ) ) {
+
+			foreach ( $exclusion as $value ) {
+				unset( $taxonomies[ $value ] );
+			}
+		}
+
+		return $taxonomies;
 	}
 
 	/**

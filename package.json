@@ -1,0 +1,9 @@
+{
+    "devDependencies": {
+      "@wordpress/env": "^8.4.0"
+    },
+    "scripts": {
+      "phpunit": "wp-env start && wp-env run --env-cwd=\"wp-content/_test/vk-term-color\" tests-wordpress vendor/bin/phpunit -c .phpunit.xml.dist --verbose --do-not-cache-result"
+    }
+  }
+  

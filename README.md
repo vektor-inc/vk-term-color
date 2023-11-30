@@ -2,6 +2,7 @@
 
 ```
 composer require vektor-inc/vk-term-color
+
 ```
 
 ## Usage
@@ -29,3 +30,15 @@ $args = array(
 );
 echo VkTermColor::get_post_terms_html( '', $args );
 ```
+
+## PHPUnit
+```
+composer install
+npx wp-env start
+npm run phpunit
+```
+
+## Change log
+
+0.7.0
+* ブロックなどで使いやすいようにタームの情報を配列で返す get_post_single_term_info() を追加
