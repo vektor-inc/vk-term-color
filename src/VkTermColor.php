@@ -280,7 +280,7 @@ class VkTermColor {
 					$term = $terms[0];
 		
 					// タームのメタデータから色を取得
-					$color = self::get_term_color($term->term_id, true);
+					$color = self::get_term_color($term->term_id);
 					
 					// テキストカラーを自動判定
 					$text_color = self::get_dynamic_text_color($color);
