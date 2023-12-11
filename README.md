@@ -40,5 +40,7 @@ npm run phpunit
 
 ## Change log
 
+* save_term_meta_color() を recieve_term_meta_color() に名称変更し、save_term_meta_color()は保存のみを担当するメソッドに変更しました。
+
 0.7.0
 * ブロックなどで使いやすいようにタームの情報を配列で返す get_post_single_term_info() を追加
