@@ -292,8 +292,7 @@ class VkTermColor {
 					$term = $terms[0];
 		
 					// タームのメタデータから色を取得
-					$color = get_term_meta($term->term_id, 'term_color', true);
-					$color = $color ? $color : $term_color_default;
+					$color = self::get_term_color($term->term_id, true);
 
 					// タームのURLを取得
 					$term_url = get_term_link($term);
