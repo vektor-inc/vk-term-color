@@ -28,7 +28,7 @@ class VkTermColorTest extends WP_UnitTestCase {
             ),
             array(
                 'name' => 'Test Category 1',
-                'color' => '#222222',
+                'color' => '#FFFFFF',
                 'id' => null
             )
         ),
@@ -62,7 +62,7 @@ class VkTermColorTest extends WP_UnitTestCase {
         $this->set_current_user( 'administrator' );
         foreach( $this->test_terms['categories'] as &$category ) {
             $category['id'] = wp_insert_category( array( 'cat_name' => $category['name'] ) );
-            add_term_meta( $category['id'], 'term_color', $category['color'] );
+            VkTermColor::save_term_meta_color($category['id'], $category['color']);
         }
 
         // 各テスト共通タクソノミーの登録
@@ -88,7 +88,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     array( 'slug' => $term['slug'] )
                 );
                 $term['id'] = $term_id_info['term_id'];
-                add_term_meta( $term['id'], 'term_color', $term['color'] );
+                VkTermColor::save_term_meta_color($term['id'], $term['color']);
             }
         }    
     }
@@ -567,5 +567,4 @@ class VkTermColorTest extends WP_UnitTestCase {
             $this->assertSame( $test['correct'], $return );
         }
     }    
-
 }
