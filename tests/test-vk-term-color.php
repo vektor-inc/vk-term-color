@@ -28,7 +28,7 @@ class VkTermColorTest extends WP_UnitTestCase {
             ),
             array(
                 'name' => 'Test Category 1',
-                'color' => '#FFFFFF',
+                'color' => '#222222',
                 'id' => null
             )
         ),
