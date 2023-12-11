@@ -275,11 +275,15 @@ class VkTermColor {
 
 				// タームが存在する場合のみ処理
 				if ($terms && !is_wp_error($terms)) {
+
 					// 最初のタームを使用
 					$term = $terms[0];
 		
 					// タームのメタデータから色を取得
 					$color = self::get_term_color($term->term_id, true);
+					
+					// テキストカラーを自動判定
+					$text_color = self::get_dynamic_text_color($color);
 
 					// タームのURLを取得
 					$term_url = get_term_link($term);
@@ -288,7 +292,8 @@ class VkTermColor {
 					$results = [
 						'term_name' => $term->name,
 						'color' => $color,
-						'term_url' => $term_url
+						'term_url' => $term_url,
+						'text_color' => $text_color
 					];
 		
 					// 一つのタクソノミーのみ処理するため、ループを抜ける
@@ -577,5 +582,30 @@ class VkTermColor {
 		$taxonomies = array_values( $taxonomies );
 		return $taxonomies;
 	}
+
+	/**
+	 * Hex値を受け取りテキスト色を判定する
+	 *
+	 * @param [type] $rgb
+	 * @return void
+	 */
+	public static function get_dynamic_text_color($hex) {
+
+		$hex = str_replace("#", "", $hex);
+	
+		// 3桁の場合は6桁に変換
+		if (strlen($hex) == 3) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+	
+		// 16進数からRGB値に変換
+		$r = hexdec(substr($hex, 0, 2));
+		$g = hexdec(substr($hex, 2, 2));
+		$b = hexdec(substr($hex, 4, 2));	
+
+		$yiq = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+		return $yiq >= 156 ? '#000000' : '#FFFFFF';
+	}
+
 
 }

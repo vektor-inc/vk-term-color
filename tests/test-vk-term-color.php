@@ -23,12 +23,12 @@ class VkTermColorTest extends WP_UnitTestCase {
         'categories' => array(
             array(
                 'name' => 'Test Category 0',
-                'color' => '#111111',
+                'color' => '#FFFFFF',
                 'id' => null
             ),
             array(
                 'name' => 'Test Category 1',
-                'color' => '#222222',
+                'color' => '#cccccc',
                 'id' => null
             )
         ),
@@ -38,13 +38,13 @@ class VkTermColorTest extends WP_UnitTestCase {
                 array(
                     'name' => 'Test Term 0',
                     'slug' => 'test-term-0',
-                    'color' => '#333333',
+                    'color' => '#000000',
                     'id' => null,
                 ),
                 array(
                     'name' => 'Test Term 1',
                     'slug' => 'test-term-1',
-                    'color' => '#333333',
+                    'color' => '#FFFF00',
                     'id' => null,
                 )
             )        
@@ -134,7 +134,8 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'correct' => array(
                     'term_name' =>  $test_category_0['name'],
                     'color' =>  $test_category_0['color'],
-                    'term_url' => site_url() . '/?cat=' .  $test_category_0['id']
+                    'term_url' => site_url() . '/?cat=' .  $test_category_0['id'],
+                    'text_color' => '#000000'
                 )
             ), 
             // カテゴリをセットしない記事は、Uncategorized が返る
@@ -148,7 +149,8 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'correct' => array(
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
-                    'term_url' => site_url() . '/?cat=1'
+                    'term_url' => site_url() . '/?cat=1',
+                    'text_color' => '#FFFFFF'
                 )
                 ),
             // カテゴリとカスタムタクソノミーをセットした記事で、表示指定をカスタムタクソノミーに指定すると、該当のタクソノミーのタームが返る
@@ -165,7 +167,8 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'correct' => array(
                     'term_name' => $test_term['name'],
                     'color' => $test_term['color'],
-                    'term_url' => site_url() . '/?' . $test_taxonomy_name . '=' .$test_term['slug']
+                    'term_url' => site_url() . '/?' . $test_taxonomy_name . '=' .$test_term['slug'],
+                    'text_color' => '#FFFFFF'
                 )
             ),  
             // カテゴリだけをセットした記事で、表示指定をカスタムタクソノミーに指定すると、取得できず null が返る
@@ -193,7 +196,8 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'correct' => array(
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
-                    'term_url' => site_url() . '/?cat=1'
+                    'term_url' => site_url() . '/?cat=1',
+                    'text_color' => '#FFFFFF'
                 )
             ),                                      
         );      
@@ -567,5 +571,61 @@ class VkTermColorTest extends WP_UnitTestCase {
             $this->assertSame( $test['correct'], $return );
         }
     }    
+
+    public function test_get_dynamic_text_color() {
+
+        $data = array(
+            '#000000' => '#FFFFFF',
+            '#333333' => '#FFFFFF',
+            '#666666' => '#FFFFFF',
+            '#999999' => '#FFFFFF',
+            '#FFFFFF' => '#000000',
+            '#330000' => '#FFFFFF',
+            '#660000' => '#FFFFFF',
+            '#990000' => '#FFFFFF',
+            '#CC0000' => '#FFFFFF',
+            '#FF0000' => '#FFFFFF',
+            '#003300' => '#FFFFFF',
+            '#006600' => '#FFFFFF',
+            '#009900' => '#FFFFFF',
+            '#00CC00' => '#FFFFFF',
+            '#00FF00' => '#FFFFFF',  
+            '#000033' => '#FFFFFF',
+            '#000066' => '#FFFFFF',
+            '#000099' => '#FFFFFF',
+            '#0000CC' => '#FFFFFF',
+            '#0000FF' => '#FFFFFF',                      
+            '#333300' => '#FFFFFF',
+            '#666600' => '#FFFFFF',
+            '#999900' => '#FFFFFF',
+            '#CCCC00' => '#000000',
+            '#FFFF00' => '#000000',
+            '#003333' => '#FFFFFF',
+            '#006666' => '#FFFFFF',
+            '#009999' => '#FFFFFF',
+            '#00CCCC' => '#FFFFFF',            
+            '#00FFFF' => '#000000',
+            '#330033' => '#FFFFFF',
+            '#660066' => '#FFFFFF',
+            '#990099' => '#FFFFFF',
+            '#CC00CC' => '#FFFFFF',
+            '#FF00FF' => '#FFFFFF',            
+        );
+
+        print PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+		print 'test_get_dynamic_text_color()' . PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+
+        foreach ( $data as $input => $correct ) {
+            $return = VkTermColor::get_dynamic_text_color($input);
+            print 'input, correct, return :' . PHP_EOL;
+            var_dump( $input, $correct, $return );
+            print PHP_EOL;       
+            $this->assertSame( $correct, $return );
+        }
+        
+    }
+
 
 }
