@@ -44,8 +44,8 @@ class VkTermColor {
 		foreach ( $taxonomies as $key => $value ) {
 			add_action( $value . '_add_form_fields', array( __CLASS__, 'taxonomy_add_new_meta_field_color' ), 10, 2 );
 			add_action( $value . '_edit_form_fields', array( __CLASS__, 'taxonomy_add_edit_meta_field_color' ), 10, 2 );
-			add_action( 'edited_' . $value, array( __CLASS__, 'save_term_meta_color' ), 10, 2 );
-			add_action( 'create_' . $value, array( __CLASS__, 'save_term_meta_color' ), 10, 2 );
+			add_action( 'edited_' . $value, array( __CLASS__, 'recieve_term_meta_color' ), 10, 2 );
+			add_action( 'create_' . $value, array( __CLASS__, 'recieve_term_meta_color' ), 10, 2 );
 			add_filter( 'manage_edit-' . $value . '_columns', array( __CLASS__, 'edit_term_columns' ) );
 			add_filter( 'manage_' . $value . '_custom_column', array( __CLASS__, 'manage_term_custom_column' ), 10, 3 );
 		}
@@ -117,23 +117,36 @@ class VkTermColor {
 	 * @param int $term_id term id.
 	 * @return void
 	 */
-	public static function save_term_meta_color( $term_id ) {
+	public static function recieve_term_meta_color( $term_id ) {
 
 		if ( ! isset( $_POST['term_color_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['term_color_nonce'] ) ), basename( __FILE__ ) ) ) {
 			return;
 		}
+		$input_color = sanitize_text_field( wp_unslash( $_POST['term_color'] ) );
+		self::save_term_meta_color( $term_id, $input_color );
 
-		if ( isset( $_POST['term_color'] ) ) {
+	}
+
+	/**
+	 * Save color function
+	 * Save extra taxonomy fields callback function.
+	 *
+	 * @param int $term_id term id.
+	 * @return void
+	 */
+	public static function save_term_meta_color( $term_id, $color ) {
+
+		$color = self::sanitize_hex( $color );
+
+		if ( isset( $color ) ) {
 			$now_value = get_term_meta( $term_id, 'term_color', true );
-			$new_value = sanitize_text_field( wp_unslash( $_POST['term_color'] ) );
-			if ( $now_value !== $new_value ) {
-				update_term_meta( $term_id, 'term_color', $new_value );
+			if ( $now_value !== $color ) {
+				update_term_meta( $term_id, 'term_color', $color );
 			} else {
-				add_term_meta( $term_id, 'term_color', $new_value );
+				add_term_meta( $term_id, 'term_color', $color );
 			}
 		}
 	}
-
 	/**
 	 * 管理画面 _ カラーピッカーのスクリプトの読み込み
 	 *
@@ -577,5 +590,4 @@ class VkTermColor {
 		$taxonomies = array_values( $taxonomies );
 		return $taxonomies;
 	}
-
 }
