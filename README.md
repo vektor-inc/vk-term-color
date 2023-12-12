@@ -40,5 +40,7 @@ npm run phpunit
 
 ## Change log
 
+* 背景色に合わせて 動的にテキスト色を決める get_dynamic_text_color() を追加
+
 0.7.0
 * ブロックなどで使いやすいようにタームの情報を配列で返す get_post_single_term_info() を追加
