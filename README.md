@@ -40,6 +40,7 @@ npm run phpunit
 
 ## Change log
 
+0.7.1
 * 背景色に合わせて 動的にテキスト色を決める get_dynamic_text_color() を追加
 
 0.7.0
