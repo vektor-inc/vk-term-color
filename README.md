@@ -31,6 +31,21 @@ $args = array(
 echo VkTermColor::get_post_terms_html( '', $args );
 ```
 
+```
+use VektorInc\VK_Term_Color\VkTermColor;
+
+global $post;
+$args = array(
+	'taxonomy' => 'area', // 対象のタクソノミーを指定
+);
+if ( class_exists( VkTermColor::class ) && method_exists( VkTermColor::class, 'get_post_single_term_info' ) ) {
+	$term_info = VkTermColor::get_post_single_term_info( $post, $args );
+	echo '<pre style="text-align:left">';
+	print_r( $term_info );
+	echo '</pre>';
+}
+```
+
 ## PHPUnit
 ```
 composer install
