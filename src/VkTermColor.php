@@ -337,7 +337,8 @@ class VkTermColor {
 
 		if ( $args['color'] ) {
 			$term_color = self::get_term_color( $term->term_id );
-			$term_color = ( $term_color ) ? ' style="color:#fff;background-color:' . $term_color . '"' : '';
+			$text_color = self::get_dynamic_text_color( $term_color );
+			$term_color = ( $term_color ) ? ' style="color:' . $text_color . ';background-color:' . $term_color . '"' : '';
 		} else {
 			$term_color = '';
 		}
