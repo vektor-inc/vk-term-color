@@ -20,20 +20,14 @@ jobs:
       run: |
         # Docker Composeのバージョンを確認
         docker compose version
-        # docker-composeコマンドのシンボリックリンクを作成
-        sudo ln -sf $(which docker) /usr/local/bin/docker-compose
-        # docker-composeスクリプトを作成
+        # docker-composeスクリプトを作成（無限ループを防ぐため絶対パスを使用）
         sudo tee /usr/local/bin/docker-compose > /dev/null << 'EOF'
         #!/bin/bash
-        docker compose "$@"
+        /usr/bin/docker compose "$@"
         EOF
         sudo chmod +x /usr/local/bin/docker-compose
         # PATHを調整して/usr/local/binを優先
-        echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
-        source ~/.bashrc
-        # エイリアスを設定
-        echo 'alias docker-compose="docker compose"' >> ~/.bashrc
-        source ~/.bashrc
+        export PATH="/usr/local/bin:$PATH"
         # 確認
         which docker-compose
         docker-compose --version
