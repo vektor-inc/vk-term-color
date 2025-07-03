@@ -18,13 +18,23 @@ jobs:
       run: npm install -g @wordpress/env
     - name: Setup Docker Compose
       run: |
-        # docker-composeコマンドのエイリアスを作成（後方互換性のため）
+        # Docker Composeのバージョンを確認
+        docker compose version
+        # docker-composeコマンドのエイリアスを作成
         sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose || true
-        # または docker compose を使用するように設定
+        # 環境変数でDocker Composeコマンドを設定
+        echo "DOCKER_COMPOSE_CMD=docker compose" >> $GITHUB_ENV
+        # エイリアスを設定
         echo 'alias docker-compose="docker compose"' >> ~/.bashrc
         source ~/.bashrc
+        # エイリアスが正しく設定されているか確認
+        docker-compose --version || docker compose --version
     - name: Run @wordpress/env
-      run: npx wp-env start
+      run: |
+        # Docker Composeの状態を確認
+        docker compose version
+        # wp-envを起動
+        npx wp-env start
 
     # PHPUnitテスト実行
     - name: Run PHPUnit test.
