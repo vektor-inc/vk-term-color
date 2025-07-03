@@ -24,7 +24,7 @@ jobs:
         echo 'alias docker-compose="docker compose"' >> ~/.bashrc
         source ~/.bashrc
     - name: Run @wordpress/env
-      run: npx wp-env@latest start
+      run: npx wp-env start
 
     # PHPUnitテスト実行
     - name: Run PHPUnit test.
