@@ -16,8 +16,15 @@ jobs:
       run: composer install
     - name: Install @wordpress/env
       run: npm install -g @wordpress/env
+    - name: Setup Docker Compose
+      run: |
+        # docker-composeコマンドのエイリアスを作成（後方互換性のため）
+        sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose || true
+        # または docker compose を使用するように設定
+        echo 'alias docker-compose="docker compose"' >> ~/.bashrc
+        source ~/.bashrc
     - name: Run @wordpress/env
-      run: npx wp-env start
+      run: npx wp-env@latest start
 
     # PHPUnitテスト実行
     - name: Run PHPUnit test.
