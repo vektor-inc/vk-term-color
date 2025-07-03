@@ -446,8 +446,9 @@ class VkTermColor {
 			}
 			$term_name  = esc_html( $terms[0]->name );
 			$term_url   = esc_url( get_term_link( $terms[0]->term_id, $taxonomy ) );
-			$term_color = self::get_term_color( $terms[0]->term_id );
-			$term_color = ( $term_color ) ? ' style="color:#fff;background-color:' . $term_color . '"' : '';
+			$term_color_code = self::get_term_color( $terms[0]->term_id );
+			$text_color = self::get_dynamic_text_color( $term_color_code );
+			$term_color = ( $term_color_code ) ? ' style="color:' . $text_color . ';background-color:' . $term_color_code . '"' : '';
 
 			if ( $args['link'] ) {
 				$single_term_with_color .= '<a' . $outer_class . $term_color . ' href="' . esc_url( $term_url ) . '">';
