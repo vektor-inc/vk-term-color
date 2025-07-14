@@ -49,6 +49,8 @@ class VkTermColor {
 			add_filter( 'manage_edit-' . $value . '_columns', array( __CLASS__, 'edit_term_columns' ) );
 			add_filter( 'manage_' . $value . '_custom_column', array( __CLASS__, 'manage_term_custom_column' ), 10, 3 );
 		}
+
+		add_action('rest_api_init', array(__CLASS__, 'register_rest_routes'));
 	}
 
 	/**
@@ -254,7 +256,6 @@ class VkTermColor {
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
-
 		$term_color_default = self::get_default_color();
 
 		// 結果を格納する配列
@@ -281,6 +282,9 @@ class VkTermColor {
 		
 					// タームのメタデータから色を取得
 					$color = self::get_term_color($term->term_id);
+					if (!$color) {
+						$color = $term_color_default;
+					}
 					
 					// テキストカラーを自動判定
 					$text_color = self::get_dynamic_text_color($color);
@@ -607,5 +611,155 @@ class VkTermColor {
 		return $yiq >= 156 ? '#000000' : '#FFFFFF';
 	}
 
+	/**
+	 * 投稿に紐づく複数のタームの色情報を取得
+	 * 複数タームの色分けに対応
+	 *
+	 * @param object $post : post object.
+	 * @param array  $args : setting parametor.
+	 * @return array|null $results : ターム情報の配列.
+	 */
+	public static function get_post_multiple_terms_info( $post, $args = array() ) {
+
+		$args_default = array(
+			'taxonomy' => '',
+		);
+		$args         = wp_parse_args( $args, $args_default );
+
+		$term_color_default = self::get_default_color();
+
+		// 結果を格納する配列
+		$results = array();
+	
+		// 投稿に紐付けられたすべてのタクソノミーを取得
+		$taxonomies = get_the_taxonomies($post);
+		
+		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies,  array( 'post_tag', 'product_type' )  );
+	
+		// タクソノミー毎の処理
+		foreach ( $taxonomies as $taxonomy_name => $v ) {
+
+			if ( '' === $args['taxonomy'] || $taxonomy_name === $args['taxonomy']  ) {
+			
+				// 投稿に紐付けられたタームを取得
+				$terms = get_the_terms($post, $taxonomy_name);
+
+				// タームが存在する場合のみ処理
+				if ($terms && !is_wp_error($terms)) {
+
+					// すべてのタームを処理
+					foreach ( $terms as $term ) {
+		
+						// タームのメタデータから色を取得
+						$color = self::get_term_color($term->term_id);
+						
+						// テキストカラーを自動判定
+						$text_color = self::get_dynamic_text_color($color);
+
+						// タームのURLを取得
+						$term_url = get_term_link($term);
+			
+						// 結果配列に追加
+						$results[] = [
+							'term_id' => $term->term_id,
+							'term_name' => $term->name,
+							'color' => $color,
+							'term_url' => $term_url,
+							'text_color' => $text_color,
+							'taxonomy' => $taxonomy_name
+						];
+					}
+		
+					// 一つのタクソノミーのみ処理するため、ループを抜ける
+					break;
+				}
+			}
+		}
+		return $results;
+	}
+
+	public static function register_rest_routes() {
+		register_rest_route('vk-term-color/v1', '/term-color', array(
+			'methods' => 'GET',
+			'callback' => array(__CLASS__, 'rest_get_term_color'),
+			'permission_callback' => '__return_true',
+			'args' => array(
+				'term_id' => array(
+					'required' => true,
+					'type' => 'integer',
+					'sanitize_callback' => 'absint',
+				),
+			),
+		));
+
+		register_rest_route('vk-term-color/v1', '/post-terms-info', array(
+			'methods' => 'POST',
+			'callback' => array(__CLASS__, 'rest_get_post_terms_info'),
+			'permission_callback' => function () {
+				return current_user_can( 'edit_theme_options' );
+			},
+			'args' => array(
+				'post_id' => array(
+					'required' => true,
+					'type' => 'integer',
+					'sanitize_callback' => 'absint',
+				),
+				'taxonomy' => array(
+					'required' => false,
+					'type' => 'string',
+					'sanitize_callback' => 'sanitize_text_field',
+				),
+			),
+		));
+	}
+
+	public static function rest_get_term_color($request) {
+		$term_id = $request->get_param('term_id');
+		$term = get_term($term_id);
+		
+		if (!$term || is_wp_error($term)) {
+			return new \WP_Error('term_not_found', 'Term not found', array('status' => 404));
+		}
+		
+		$color = self::get_term_color($term_id);
+		$text_color = self::get_dynamic_text_color($color);
+		
+		return array(
+			'term_id' => $term_id,
+			'term_name' => $term->name,
+			'color' => $color,
+			'text_color' => $text_color,
+			'term_url' => get_term_link($term),
+		);
+	}
+
+	/**
+	 * REST API: 投稿に紐づく複数タームの色情報を取得
+	 *
+	 * @param object $request : request object.
+	 * @return array|WP_Error : ターム情報の配列またはエラー.
+	 */
+	public static function rest_get_post_terms_info($request) {
+		$post_id = $request->get_param('post_id');
+		$taxonomy = $request->get_param('taxonomy');
+		
+		$post = get_post($post_id);
+		if (!$post) {
+			return new \WP_Error('post_not_found', 'Post not found', array('status' => 404));
+		}
+		
+		$args = array();
+		if (!empty($taxonomy)) {
+			$args['taxonomy'] = $taxonomy;
+		}
+		
+		$terms_info = self::get_post_multiple_terms_info($post, $args);
+		
+		if (empty($terms_info)) {
+			return array('error' => 'not found');
+		}
+		
+		return $terms_info;
+	}
 
 }
