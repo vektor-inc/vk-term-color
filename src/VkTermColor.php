@@ -207,7 +207,8 @@ class VkTermColor {
 				$color = '#ffffff';
 			}
 
-			$out = sprintf( '<span class="color-block" style="background:%s;">&nbsp;</span>', esc_attr( $color ) );
+			$text_color = self::get_dynamic_text_color( $color );
+			$out = sprintf( '<span class="color-block" style="background:%s;color:%s;">&nbsp;</span>', esc_attr( $color ), esc_attr( $text_color ) );
 		}
 
 		return $out;
