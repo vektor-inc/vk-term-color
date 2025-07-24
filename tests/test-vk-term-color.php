@@ -941,6 +941,12 @@ class VkTermColorTest extends WP_UnitTestCase {
             var_dump( $test['correct'] );
             print PHP_EOL;
             
+            // デバッグ情報を追加
+            print 'Test correct type: ' . gettype($test['correct']) . PHP_EOL;
+            print 'Test correct value: ' . PHP_EOL;
+            var_dump($test['correct']);
+            print PHP_EOL;
+            
             if ( $test['correct'] === 'WP_Error' ) {
                 $this->assertInstanceOf('WP_Error', $return);
             } elseif ( is_array($test['correct']) ) {
@@ -955,6 +961,9 @@ class VkTermColorTest extends WP_UnitTestCase {
                         }
                     }
                 }
+            } else {
+                // 予期しない型の場合
+                $this->fail('Unexpected type for test correct: ' . gettype($test['correct']));
             }
         }
 	}
