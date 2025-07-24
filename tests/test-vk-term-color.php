@@ -947,7 +947,7 @@ class VkTermColorTest extends WP_UnitTestCase {
             var_dump($test['correct']);
             print PHP_EOL;
             
-            if ( $test['correct'] === 'WP_Error' ) {
+            if ( is_string($test['correct']) && $test['correct'] === 'WP_Error' ) {
                 $this->assertInstanceOf('WP_Error', $return);
             } elseif ( is_array($test['correct']) ) {
                 // 配列の要素数をチェック
