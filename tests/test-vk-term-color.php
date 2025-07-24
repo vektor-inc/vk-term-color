@@ -627,5 +627,317 @@ class VkTermColorTest extends WP_UnitTestCase {
         
     }
 
+    /**
+     * Test case get_post_multiple_terms_info() 
+     *
+     * @return void
+     */
+	public function test_get_post_multiple_terms_info() {
+      
+        $default_color = VkTermColor::get_default_color();
+        
+        // テストパターンでつかえるよう、わかりやすい変数名に置き換え
+        $test_category_0 = $this->test_terms['categories'][0];
+        $test_category_1 = $this->test_terms['categories'][1];
+        $test_taxonomy_name = $this->test_taxonomies[0]['name'];
+        $test_term_0 = $this->test_terms['terms'][$test_taxonomy_name][0];
+        $test_term_1 = $this->test_terms['terms'][$test_taxonomy_name][1];
+
+        // テストパターン
+        $tests = array(
+            // カテゴリのみをセットした記事の場合、該当カテゴリが返る
+            array( 
+                'data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'post_category' => array( $test_category_0['id'] )
+                ),
+                'args' => array(),
+                'correct' => array(
+                    array(
+                        'term_id' => $test_category_0['id'],
+                        'term_name' => $test_category_0['name'],
+                        'color' => $test_category_0['color'],
+                        'term_url' => site_url() . '/?cat=' . $test_category_0['id'],
+                        'text_color' => '#000000',
+                        'taxonomy' => 'category'
+                    )
+                )
+            ), 
+            // カテゴリをセットしない記事は、Uncategorized が返る
+            array( 
+                'data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish'
+                ),
+                'args' => array(),
+                'correct' => array(
+                    array(
+                        'term_id' => 1,
+                        'term_name' => 'Uncategorized',
+                        'color' => $default_color,
+                        'term_url' => site_url() . '/?cat=1',
+                        'text_color' => '#FFFFFF',
+                        'taxonomy' => 'category'
+                    )
+                )
+            ),
+            // 複数カテゴリをセットした記事の場合、最初のカテゴリのみが返る（既存の仕様に合わせて）
+            array( 
+                'data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'post_category' => array( $test_category_0['id'], $test_category_1['id'] )
+                ),
+                'args' => array(),
+                'correct' => array(
+                    array(
+                        'term_id' => $test_category_0['id'],
+                        'term_name' => $test_category_0['name'],
+                        'color' => $test_category_0['color'],
+                        'term_url' => site_url() . '/?cat=' . $test_category_0['id'],
+                        'text_color' => '#000000',
+                        'taxonomy' => 'category'
+                    )
+                )
+            ),
+            // カスタムタクソノミーを指定した場合、該当のタクソノミーのタームが返る
+            array( 
+                'data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'post_category' => array( $test_category_0['id'] ),
+                    'tax_input' => array( $test_taxonomy_name => array( $test_term_0['id'], $test_term_1['id'] ) )
+                ),
+                'args' => array( 'taxonomy' => $test_taxonomy_name ),
+                'correct' => array(
+                    array(
+                        'term_id' => $test_term_0['id'],
+                        'term_name' => $test_term_0['name'],
+                        'color' => $test_term_0['color'],
+                        'term_url' => site_url() . '/?' . $test_taxonomy_name . '=' . $test_term_0['slug'],
+                        'text_color' => '#FFFFFF',
+                        'taxonomy' => $test_taxonomy_name
+                    ),
+                    array(
+                        'term_id' => $test_term_1['id'],
+                        'term_name' => $test_term_1['name'],
+                        'color' => $test_term_1['color'],
+                        'term_url' => site_url() . '/?' . $test_taxonomy_name . '=' . $test_term_1['slug'],
+                        'text_color' => '#000000',
+                        'taxonomy' => $test_taxonomy_name
+                    )
+                )
+            ),
+            // カテゴリだけをセットした記事で、表示指定をカスタムタクソノミーに指定すると、空配列が返る
+            array( 
+                'data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'post_category' => array( $test_category_0['id'] ),
+                ),
+                'args' => array( 'taxonomy' => $test_taxonomy_name ),
+                'correct' => array()
+            ), 
+            // タクソノミーだけをセットした記事で、表示指定をカテゴリーに指定すると、Uncategorized が返る
+            array( 
+                'data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'tax_input' => array( $test_taxonomy_name => array( $test_term_0['id'] ) )
+                ),
+                'args' => array( 'taxonomy' => 'category' ),
+                'correct' => array(
+                    array(
+                        'term_id' => 1,
+                        'term_name' => 'Uncategorized',
+                        'color' => $default_color,
+                        'term_url' => site_url() . '/?cat=1',
+                        'text_color' => '#FFFFFF',
+                        'taxonomy' => 'category'
+                    )
+                )
+            ),                                      
+        );      
+        
+        print PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+		print 'test_get_post_multiple_terms_info()' . PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+
+        // テストパターンを順々にテスト
+        foreach ( $tests as $test ) {
+            $post_id = wp_insert_post( $test['data'] );
+            $post = get_post( $post_id );
+
+            $return = VkTermColor::get_post_multiple_terms_info( $post, $test['args'] );
+            
+            print 'return  :' . PHP_EOL;
+            var_dump( $return );
+            print PHP_EOL;
+            print 'correct  :'. PHP_EOL;
+            var_dump( $test['correct'] );
+            print PHP_EOL;
+            
+            // 配列の要素数をチェック
+            $this->assertSame( count($test['correct']), count($return) );
+            
+            // 各要素の内容をチェック
+            foreach( $test['correct'] as $index => $expected_term ) {
+                if ( isset($return[$index]) ) {
+                    foreach( $expected_term as $key => $value ) {
+                        $this->assertSame( $value, $return[$index][$key] );
+                    }
+                }
+            }
+        }
+	}
+
+    /**
+     * Test case rest_get_post_terms_info() 
+     *
+     * @return void
+     */
+	public function test_rest_get_post_terms_info() {
+      
+        $default_color = VkTermColor::get_default_color();
+        
+        // テストパターンでつかえるよう、わかりやすい変数名に置き換え
+        $test_category_0 = $this->test_terms['categories'][0];
+        $test_taxonomy_name = $this->test_taxonomies[0]['name'];
+        $test_term_0 = $this->test_terms['terms'][$test_taxonomy_name][0];
+
+        // テストパターン
+        $tests = array(
+            // 正常な投稿IDでカテゴリ情報を取得
+            array( 
+                'post_data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'post_category' => array( $test_category_0['id'] )
+                ),
+                'request_params' => array(
+                    'post_id' => null, // テスト内で設定
+                    'taxonomy' => ''
+                ),
+                'correct' => array(
+                    array(
+                        'term_id' => $test_category_0['id'],
+                        'term_name' => $test_category_0['name'],
+                        'color' => $test_category_0['color'],
+                        'term_url' => site_url() . '/?cat=' . $test_category_0['id'],
+                        'text_color' => '#000000',
+                        'taxonomy' => 'category'
+                    )
+                )
+            ), 
+            // 存在しない投稿IDでエラーを返す
+            array( 
+                'post_data' => null,
+                'request_params' => array(
+                    'post_id' => 99999,
+                    'taxonomy' => ''
+                ),
+                'correct' => 'WP_Error'
+            ),
+            // 特定のタクソノミーを指定してターム情報を取得
+            array( 
+                'post_data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'tax_input' => array( $test_taxonomy_name => array( $test_term_0['id'] ) )
+                ),
+                'request_params' => array(
+                    'post_id' => null, // テスト内で設定
+                    'taxonomy' => $test_taxonomy_name
+                ),
+                'correct' => array(
+                    array(
+                        'term_id' => $test_term_0['id'],
+                        'term_name' => $test_term_0['name'],
+                        'color' => $test_term_0['color'],
+                        'term_url' => site_url() . '/?' . $test_taxonomy_name . '=' . $test_term_0['slug'],
+                        'text_color' => '#FFFFFF',
+                        'taxonomy' => $test_taxonomy_name
+                    )
+                )
+            ),
+            // タームが存在しない場合、空配列が返る
+            array( 
+                'post_data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish'
+                ),
+                'request_params' => array(
+                    'post_id' => null, // テスト内で設定
+                    'taxonomy' => $test_taxonomy_name
+                ),
+                'correct' => array('error' => 'not found')
+            ),                                      
+        );      
+        
+        print PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+		print 'test_rest_get_post_terms_info()' . PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+
+        // テストパターンを順々にテスト
+        foreach ( $tests as $test ) {
+            $post_id = null;
+            if ( $test['post_data'] ) {
+                $post_id = wp_insert_post( $test['post_data'] );
+                $test['request_params']['post_id'] = $post_id;
+            }
+
+            // モックリクエストオブジェクトを作成
+            $request = new WP_REST_Request('POST', '/vk-term-color/v1/post-terms-info');
+            $request->set_param('post_id', $test['request_params']['post_id']);
+            $request->set_param('taxonomy', $test['request_params']['taxonomy']);
+
+            $return = VkTermColor::rest_get_post_terms_info($request);
+            
+            print 'return  :' . PHP_EOL;
+            var_dump( $return );
+            print PHP_EOL;
+            print 'correct  :'. PHP_EOL;
+            var_dump( $test['correct'] );
+            print PHP_EOL;
+            
+            if ( $test['correct'] === 'WP_Error' ) {
+                $this->assertInstanceOf('WP_Error', $return);
+            } else {
+                // 配列の要素数をチェック
+                $this->assertSame( count($test['correct']), count($return) );
+                
+                // 各要素の内容をチェック
+                foreach( $test['correct'] as $index => $expected_term ) {
+                    if ( isset($return[$index]) ) {
+                        foreach( $expected_term as $key => $value ) {
+                            $this->assertSame( $value, $return[$index][$key] );
+                        }
+                    }
+                }
+            }
+        }
+	}
+
 
 }
