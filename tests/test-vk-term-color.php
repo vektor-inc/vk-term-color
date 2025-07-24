@@ -920,7 +920,9 @@ class VkTermColorTest extends WP_UnitTestCase {
 		print '------------------------------------' . PHP_EOL;
 
         // テストパターンを順々にテスト
-        foreach ( $tests as $test ) {
+        foreach ( $tests as $test_index => $test ) {
+            print 'Processing test case ' . ($test_index + 1) . PHP_EOL;
+            
             $post_id = null;
             if ( $test['post_data'] ) {
                 $post_id = wp_insert_post( $test['post_data'] );
@@ -941,15 +943,11 @@ class VkTermColorTest extends WP_UnitTestCase {
             var_dump( $test['correct'] );
             print PHP_EOL;
             
-            // デバッグ情報を追加
-            print 'Test correct type: ' . gettype($test['correct']) . PHP_EOL;
-            print 'Test correct value: ' . PHP_EOL;
-            var_dump($test['correct']);
-            print PHP_EOL;
-            
             if ( is_string($test['correct']) && $test['correct'] === 'WP_Error' ) {
+                print 'Processing WP_Error case' . PHP_EOL;
                 $this->assertInstanceOf('WP_Error', $return);
             } elseif ( is_array($test['correct']) ) {
+                print 'Processing array case' . PHP_EOL;
                 // 配列の要素数をチェック
                 $this->assertSame( count($test['correct']), count($return) );
                 
@@ -963,6 +961,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                 }
             } else {
                 // 予期しない型の場合
+                print 'Unexpected type case' . PHP_EOL;
                 $this->fail('Unexpected type for test correct: ' . gettype($test['correct']));
             }
         }
