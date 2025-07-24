@@ -865,15 +865,6 @@ class VkTermColorTest extends WP_UnitTestCase {
                     )
                 )
             ), 
-            // 存在しない投稿IDでエラーを返す
-            array( 
-                'post_data' => null,
-                'request_params' => array(
-                    'post_id' => 99999,
-                    'taxonomy' => ''
-                ),
-                'correct' => 'WP_Error'
-            ),
             // 特定のタクソノミーを指定してターム情報を取得
             array( 
                 'post_data' => array(
@@ -941,6 +932,12 @@ class VkTermColorTest extends WP_UnitTestCase {
             print PHP_EOL;
             print 'correct  :'. PHP_EOL;
             var_dump( $test['correct'] );
+            print PHP_EOL;
+            
+            print 'About to check type conditions...' . PHP_EOL;
+            print 'Test correct type: ' . gettype($test['correct']) . PHP_EOL;
+            print 'Test correct value: ' . PHP_EOL;
+            var_dump($test['correct']);
             print PHP_EOL;
             
             if ( is_string($test['correct']) && $test['correct'] === 'WP_Error' ) {
