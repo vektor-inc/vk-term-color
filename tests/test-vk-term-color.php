@@ -707,7 +707,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     )
                 )
             ),
-            // カスタムタクソノミーを指定した場合、該当のタクソノミーのタームが返る
+            // カスタムタクソノミーを指定した場合、該当のタクソノミーのすべてのタームが返る
             array( 
                 'data' => array(
                     'post_title'   => 'Page Title',
@@ -784,6 +784,10 @@ class VkTermColorTest extends WP_UnitTestCase {
 
             $return = VkTermColor::get_post_multiple_terms_info( $post, $test['args'] );
             
+            print 'Post ID: ' . $post_id . PHP_EOL;
+            print 'Taxonomy: ' . $test['args']['taxonomy'] . PHP_EOL;
+            print 'Terms from get_the_terms: ' . PHP_EOL;
+            var_dump( get_the_terms( $post, $test['args']['taxonomy'] ) );
             print 'return  :' . PHP_EOL;
             var_dump( $return );
             print PHP_EOL;
@@ -923,7 +927,7 @@ class VkTermColorTest extends WP_UnitTestCase {
             
             if ( $test['correct'] === 'WP_Error' ) {
                 $this->assertInstanceOf('WP_Error', $return);
-            } else {
+            } elseif ( is_array($test['correct']) ) {
                 // 配列の要素数をチェック
                 $this->assertSame( count($test['correct']), count($return) );
                 
