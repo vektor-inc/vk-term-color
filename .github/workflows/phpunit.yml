@@ -16,8 +16,27 @@ jobs:
       run: composer install
     - name: Install @wordpress/env
       run: npm install -g @wordpress/env
+    - name: Setup Docker Compose
+      run: |
+        # Docker Composeのバージョンを確認
+        docker compose version
+        # docker-composeスクリプトを作成（無限ループを防ぐため絶対パスを使用）
+        sudo tee /usr/local/bin/docker-compose > /dev/null << 'EOF'
+        #!/bin/bash
+        /usr/bin/docker compose "$@"
+        EOF
+        sudo chmod +x /usr/local/bin/docker-compose
+        # PATHを調整して/usr/local/binを優先
+        export PATH="/usr/local/bin:$PATH"
+        # 確認
+        which docker-compose
+        docker-compose --version
     - name: Run @wordpress/env
-      run: npx wp-env start
+      run: |
+        # Docker Composeの状態を確認
+        docker compose version
+        # wp-envを起動
+        npx wp-env start
 
     # PHPUnitテスト実行
     - name: Run PHPUnit test.
