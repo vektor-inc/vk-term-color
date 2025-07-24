@@ -617,7 +617,7 @@ class VkTermColor {
 	 *
 	 * @param object $post : post object.
 	 * @param array  $args : setting parametor.
-	 * @return array|null $results : ターム情報の配列.
+	 * @return array $results : ターム情報の配列.
 	 */
 	public static function get_post_multiple_terms_info( $post, $args = array() ) {
 
@@ -658,6 +658,9 @@ class VkTermColor {
 
 						// タームのURLを取得
 						$term_url = get_term_link($term);
+						if (is_wp_error($term_url)) {
+							$term_url = '';
+						}
 			
 						// 結果配列に追加
 						$results[] = [
