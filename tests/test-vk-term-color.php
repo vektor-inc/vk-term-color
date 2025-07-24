@@ -150,7 +150,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
                     'term_url' => site_url() . '/?cat=1',
-                    'text_color' => '#FFFFFF'
+                    'text_color' => '#000000'
                 )
                 ),
             // カテゴリとカスタムタクソノミーをセットした記事で、表示指定をカスタムタクソノミーに指定すると、該当のタクソノミーのタームが返る
@@ -197,7 +197,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
                     'term_url' => site_url() . '/?cat=1',
-                    'text_color' => '#FFFFFF'
+                    'text_color' => '#000000'
                 )
             ),                                      
         );      
@@ -255,7 +255,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_category' => array( $test_category_0['id'] )
                 ),
                 'args' => array(),
-                'correct' => '<span class="btn btn-sm" style="color:#fff;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
+                'correct' => '<span class="btn btn-sm" style="color:#000000;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
             ),
             // カテゴリをセットしない投稿
             array( 
@@ -266,7 +266,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_status'  => 'publish'
                 ),
                 'args' => array(),
-                'correct' => '<span class="btn btn-sm" style="color:#fff;background-color:' . $default_color . '">Uncategorized</span>'
+                'correct' => '<span class="btn btn-sm" style="color:#000000;background-color:' . $default_color . '">Uncategorized</span>'
             ),
             // オプション指定（リンクあり、色なし）
             array( 
@@ -302,7 +302,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'link'               => true,
                     'color'              => true,
                 ),
-                'correct' => '<div class="vk-term-color-test-single"><a class="vk-term-color-test-single-inner" style="color:#fff;background-color:' . $test_category_0['color'] . '" href="' . site_url() . '/?cat=' . $test_category_0['id'] . '">' . $test_category_0['name'] .'</a></div>'
+                'correct' => '<div class="vk-term-color-test-single"><a class="vk-term-color-test-single-inner" style="color:#000000;background-color:' . $test_category_0['color'] . '" href="' . site_url() . '/?cat=' . $test_category_0['id'] . '">' . $test_category_0['name'] .'</a></div>'
             ),  
           // オプション指定（リンクなし、色なし）
           array( 
@@ -338,7 +338,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'link'               => false,
                 'color'              => true,
             ),
-            'correct' => '<div class="vk-term-color-test-single"><span class="vk-term-color-test-single-inner" style="color:#fff;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span></div>'
+            'correct' => '<div class="vk-term-color-test-single"><span class="vk-term-color-test-single-inner" style="color:#000000;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span></div>'
         ),                                
         );          
 
@@ -390,7 +390,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_category' => array( $test_category_0['id'] )
                 ),
                 'args' => array(),
-                'correct' => '<span style="color:#fff;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
+                'correct' => '<span style="color:#000000;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
             ),
             // カテゴリをセットしない投稿
             array( 
@@ -401,7 +401,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_status'  => 'publish'
                 ),
                 'args' => array(),
-                'correct' => '<span style="color:#fff;background-color:' . $default_color . '">Uncategorized</span>'
+                'correct' => '<span style="color:#000000;background-color:' . $default_color . '">Uncategorized</span>'
             ),
             // オプション指定（リンクあり、クラスあり）
             array( 
@@ -416,7 +416,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'class'       => 'vk-term-color-test-single',
                     'link'               => true,
                 ),
-                'correct' => '<a class="vk-term-color-test-single" style="color:#fff;background-color:' . $test_category_0['color'] . '" href="' . site_url() . '/?cat=' . $test_category_0['id'] . '">' . $test_category_0['name'] .'</a>'
+                'correct' => '<a class="vk-term-color-test-single" style="color:#000000;background-color:' . $test_category_0['color'] . '" href="' . site_url() . '/?cat=' . $test_category_0['id'] . '">' . $test_category_0['name'] .'</a>'
             ),    
             // オプション指定（リンクあり、クラスあり）
             array( 
@@ -431,7 +431,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'class'       => 'vk-term-color-test-single',
                     'link'               => false,
                 ),
-                'correct' => '<span class="vk-term-color-test-single" style="color:#fff;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
+                'correct' => '<span class="vk-term-color-test-single" style="color:#000000;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
             ), 
             // オプション指定（リンクあり、クラスなし）
             array( 
@@ -445,7 +445,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'args' => array(
                     'link'               => true,
                 ),
-                'correct' => '<a style="color:#fff;background-color:' . $test_category_0['color'] . '" href="' . site_url() . '/?cat=' . $test_category_0['id'] . '">' . $test_category_0['name'] .'</a>'
+                'correct' => '<a style="color:#000000;background-color:' . $test_category_0['color'] . '" href="' . site_url() . '/?cat=' . $test_category_0['id'] . '">' . $test_category_0['name'] .'</a>'
             ),    
             // オプション指定（リンクなし、クラスなし）
             array( 
@@ -459,7 +459,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'args' => array(
                     'link'               => false,
                 ),
-                'correct' => '<span style="color:#fff;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
+                'correct' => '<span style="color:#000000;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
             ),                                     
         );          
 
