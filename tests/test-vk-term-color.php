@@ -686,7 +686,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     )
                 )
             ),
-            // 複数カテゴリをセットした記事の場合、最初のカテゴリのみが返る（既存の仕様に合わせて）
+            // 複数カテゴリをセットした記事の場合、すべてのカテゴリが返る
             array( 
                 'data' => array(
                     'post_title'   => 'Page Title',
@@ -702,6 +702,14 @@ class VkTermColorTest extends WP_UnitTestCase {
                         'term_name' => $test_category_0['name'],
                         'color' => $test_category_0['color'],
                         'term_url' => site_url() . '/?cat=' . $test_category_0['id'],
+                        'text_color' => '#000000',
+                        'taxonomy' => 'category'
+                    ),
+                    array(
+                        'term_id' => $test_category_1['id'],
+                        'term_name' => $test_category_1['name'],
+                        'color' => $test_category_1['color'],
+                        'term_url' => site_url() . '/?cat=' . $test_category_1['id'],
                         'text_color' => '#000000',
                         'taxonomy' => 'category'
                     )
@@ -785,9 +793,17 @@ class VkTermColorTest extends WP_UnitTestCase {
             $return = VkTermColor::get_post_multiple_terms_info( $post, $test['args'] );
             
             print 'Post ID: ' . $post_id . PHP_EOL;
-            print 'Taxonomy: ' . $test['args']['taxonomy'] . PHP_EOL;
-            print 'Terms from get_the_terms: ' . PHP_EOL;
-            var_dump( get_the_terms( $post, $test['args']['taxonomy'] ) );
+            print 'Args: ' . PHP_EOL;
+            var_dump( $test['args'] );
+            if ( isset($test['args']['taxonomy']) && !empty($test['args']['taxonomy']) ) {
+                print 'Taxonomy: ' . $test['args']['taxonomy'] . PHP_EOL;
+                print 'Terms from get_the_terms: ' . PHP_EOL;
+                var_dump( get_the_terms( $post, $test['args']['taxonomy'] ) );
+            } else {
+                print 'No specific taxonomy specified' . PHP_EOL;
+                print 'All taxonomies: ' . PHP_EOL;
+                var_dump( get_the_taxonomies( $post ) );
+            }
             print 'return  :' . PHP_EOL;
             var_dump( $return );
             print PHP_EOL;
