@@ -150,7 +150,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
                     'term_url' => site_url() . '/?cat=1',
-                    'text_color' => '#000000'
+                    'text_color' => '#FFFFFF'
                 )
                 ),
             // カテゴリとカスタムタクソノミーをセットした記事で、表示指定をカスタムタクソノミーに指定すると、該当のタクソノミーのタームが返る
@@ -197,7 +197,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
                     'term_url' => site_url() . '/?cat=1',
-                    'text_color' => '#000000'
+                    'text_color' => '#FFFFFF'
                 )
             ),                                      
         );      
@@ -266,7 +266,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_status'  => 'publish'
                 ),
                 'args' => array(),
-                'correct' => '<span class="btn btn-sm" style="color:#000000;background-color:' . $default_color . '">Uncategorized</span>'
+                'correct' => '<span class="btn btn-sm" style="color:#FFFFFF;background-color:' . $default_color . '">Uncategorized</span>'
             ),
             // オプション指定（リンクあり、色なし）
             array( 
@@ -401,7 +401,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_status'  => 'publish'
                 ),
                 'args' => array(),
-                'correct' => '<span style="color:#000000;background-color:' . $default_color . '">Uncategorized</span>'
+                'correct' => '<span style="color:#FFFFFF;background-color:' . $default_color . '">Uncategorized</span>'
             ),
             // オプション指定（リンクあり、クラスあり）
             array( 
