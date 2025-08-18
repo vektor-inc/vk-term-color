@@ -55,6 +55,8 @@ npm run phpunit
 
 ## Change log
 
+* 投稿のカテゴリーにて背景色に合わせて動的にテキスト色を決める get_dynamic_text_color() を適用
+
 0.7.1
 * 背景色に合わせて 動的にテキスト色を決める get_dynamic_text_color() を追加
 
