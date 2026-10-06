@@ -76,6 +76,10 @@ class VkTermColor {
 	 */
 	public static function sanitize_hex( $color ) {
 		// sanitize_hex_color() は undefined function くらう.
+		// update_term_meta() は配列などの非文字列値も受け付けるため、ltrim() に渡す前に弾く.
+		if ( ! is_string( $color ) ) {
+			return '';
+		}
 		$color = ltrim( $color, '#' );
 		return preg_match( '/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color ) ? $color : '';
 	}

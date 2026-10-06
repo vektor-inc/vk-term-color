@@ -679,6 +679,11 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'input'                => '#ff0000ff',
                 'expected'             => '',
             ),
+            array(
+                'test_condition_name' => '配列値を渡しても TypeError にならず空文字として保存される',
+                'input'                => array( '#ff0000' ),
+                'expected'             => '',
+            ),
         );
 
         foreach ( $tests as $test ) {
