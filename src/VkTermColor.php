@@ -34,7 +34,15 @@ class VkTermColor {
 		$locale = ( is_admin() && function_exists( 'get_user_locale' ) ) ? get_user_locale() : get_locale();
 		load_textdomain( 'vk-term-color', dirname( __FILE__ ) . '/languages/' . 'vk-term-color-' . $locale . '.mo' );
 
-		add_action( 'init', array( __CLASS__, 'term_meta_color' ) );
+		/*
+		 * init の実行中に init() が呼ばれると、同じ init へ追加したコールバックは今回走らない.
+		 * その場合はここで register_meta() する.
+		 */
+		if ( did_action( 'init' ) ) {
+			self::term_meta_color();
+		} else {
+			add_action( 'init', array( __CLASS__, 'term_meta_color' ) );
+		}
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
 
 		// カラーピッカーを追加するタクソノミー.
@@ -57,7 +65,7 @@ class VkTermColor {
 	 * @return void
 	 */
 	public static function term_meta_color() {
-		register_meta( 'term', 'term_color', array( 'sanitize_callback', array( __CLASS__, 'sanitize_hex' ) ) );
+		register_meta( 'term', 'term_color', array( 'sanitize_callback' => array( __CLASS__, 'sanitize_hex' ) ) );
 	}
 
 	/**
@@ -68,6 +76,10 @@ class VkTermColor {
 	 */
 	public static function sanitize_hex( $color ) {
 		// sanitize_hex_color() は undefined function くらう.
+		// update_term_meta() は配列などの非文字列値も受け付けるため、ltrim() に渡す前に弾く.
+		if ( ! is_string( $color ) ) {
+			return '';
+		}
 		$color = ltrim( $color, '#' );
 		return preg_match( '/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color ) ? $color : '';
 	}

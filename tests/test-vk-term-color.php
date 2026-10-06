@@ -628,4 +628,117 @@ class VkTermColorTest extends WP_UnitTestCase {
     }
 
 
+    /**
+     * Test case term_meta_color()
+     * register_meta() が term_color に対して sanitize_callback 付きで登録され、
+     * 保存時のサニタイズが実際に効くことを確認する
+     *
+     * @return void
+     */
+    public function test_term_meta_color() {
+
+        VkTermColor::term_meta_color();
+
+        print PHP_EOL;
+        print '------------------------------------' . PHP_EOL;
+        print 'test_term_meta_color()' . PHP_EOL;
+        print '------------------------------------' . PHP_EOL;
+
+        // register_meta() が連想配列キーで sanitize_callback を登録していることを確認
+        $registered_meta = get_registered_meta_keys( 'term' );
+
+        $this->assertArrayHasKey( 'term_color', $registered_meta, 'term_color が register_meta() で登録されていません.' );
+        $this->assertSame(
+            array( VkTermColor::class, 'sanitize_hex' ),
+            $registered_meta['term_color']['sanitize_callback'],
+            'term_color の sanitize_callback が正しく登録されていません.'
+        );
+
+        // 保存時のサニタイズ確認用のターム
+        $term_id = $this->test_terms['terms'][ $this->test_taxonomies[0]['name'] ][0]['id'];
+
+        // テストパターン
+        $tests = array(
+            array(
+                'test_condition_name' => '6桁の正しいカラー値は # を除いて保存される',
+                'input'                => '#ff0000',
+                'expected'             => 'ff0000',
+            ),
+            array(
+                'test_condition_name' => '3桁の正しいカラー値はそのまま保存される',
+                'input'                => '#abc',
+                'expected'             => 'abc',
+            ),
+            array(
+                'test_condition_name' => '16進数カラーではない値は空文字として保存される',
+                'input'                => 'notacolor000',
+                'expected'             => '',
+            ),
+            array(
+                'test_condition_name' => '桁数が不正なカラー値（8桁）は空文字として保存される',
+                'input'                => '#ff0000ff',
+                'expected'             => '',
+            ),
+            array(
+                'test_condition_name' => '配列値を渡しても TypeError にならず空文字として保存される',
+                'input'                => array( '#ff0000' ),
+                'expected'             => '',
+            ),
+        );
+
+        foreach ( $tests as $test ) {
+            update_term_meta( $term_id, 'term_color', $test['input'] );
+            $actual = get_term_meta( $term_id, 'term_color', true );
+
+            print 'input, expected, actual :' . PHP_EOL;
+            var_dump( $test['input'], $test['expected'], $actual );
+            print PHP_EOL;
+
+            $this->assertSame( $test['expected'], $actual, $test['test_condition_name'] );
+        }
+    }
+
+    /**
+     * Test case init()
+     * init アクションの実行中（did_action('init') が真）に init() が呼ばれても、
+     * term_meta_color() がその場で実行され term_color の sanitize_callback が
+     * 登録されることを確認する（add_action で積むだけでは発火しないケースの検知用）
+     *
+     * @return void
+     */
+    public function test_init_registers_term_meta_color_when_init_already_fired() {
+        global $wp_actions;
+
+        print PHP_EOL;
+        print '------------------------------------' . PHP_EOL;
+        print 'test_init_registers_term_meta_color_when_init_already_fired()' . PHP_EOL;
+        print '------------------------------------' . PHP_EOL;
+
+        // init が既に発火済みの状態を明示的に再現する
+        $before_init_count  = isset( $wp_actions['init'] ) ? $wp_actions['init'] : 0;
+        $wp_actions['init'] = 1;
+
+        try {
+            $this->assertTrue( (bool) did_action( 'init' ), 'テスト前提の did_action( \'init\' ) が真になっていません.' );
+
+            VkTermColor::init();
+
+            $registered_meta = get_registered_meta_keys( 'term' );
+
+            $this->assertArrayHasKey(
+                'term_color',
+                $registered_meta,
+                'did_action(\'init\') が真の状態で init() を呼んでも term_color が register_meta() されていません.'
+            );
+            $this->assertSame(
+                array( VkTermColor::class, 'sanitize_hex' ),
+                $registered_meta['term_color']['sanitize_callback'],
+                'did_action(\'init\') が真の状態で init() を呼んだ際の term_color の sanitize_callback が正しくありません.'
+            );
+        } finally {
+            // 他のテストへ init の発火状態を持ち越さない
+            $wp_actions['init'] = $before_init_count;
+        }
+    }
+
 }

@@ -55,6 +55,7 @@ npm run phpunit
 
 ## Change log
 
+* ターム色の保存時検証が動くよう、register_meta() の sanitize_callback を連想配列キーで登録する。init の途中で読み込まれた場合もその場で登録する
 * 投稿のカテゴリーにて背景色に合わせて動的にテキスト色を決める get_dynamic_text_color() を適用
 
 0.7.1
