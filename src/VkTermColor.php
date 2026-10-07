@@ -81,7 +81,7 @@ class VkTermColor {
 			return '';
 		}
 		$color = ltrim( $color, '#' );
-		return preg_match( '/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $color ) ? $color : '';
+		return preg_match( '/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\z/', $color ) ? $color : '';
 	}
 
 	/**
