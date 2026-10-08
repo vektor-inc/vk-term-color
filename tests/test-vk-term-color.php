@@ -684,6 +684,11 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'input'                => array( '#ff0000' ),
                 'expected'             => '',
             ),
+            array(
+                'test_condition_name' => '末尾に改行を付けた値は空文字として保存される（PCREの$は末尾改行の直前にもマッチするため）',
+                'input'                => "abc\n",
+                'expected'             => '',
+            ),
         );
 
         foreach ( $tests as $test ) {
