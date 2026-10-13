@@ -628,7 +628,13 @@ class VkTermColor {
 		$b = hexdec(substr($hex, 4, 2));
 
 		// 背景色の相対輝度（WCAGの計算式）を求める.
-		$luminance = self::get_relative_luminance( $r, $g, $b );
+		// 各チャンネルを 0.0〜1.0 に正規化してガンマ補正（リニア値に変換）したうえで加重合計する.
+		$linear = array();
+		foreach ( array( $r, $g, $b ) as $channel ) {
+			$channel  = $channel / 255;
+			$linear[] = $channel <= 0.03928 ? $channel / 12.92 : pow( ( $channel + 0.055 ) / 1.055, 2.4 );
+		}
+		$luminance = 0.2126 * $linear[0] + 0.7152 * $linear[1] + 0.0722 * $linear[2];
 
 		// 黒文字・白文字それぞれとのコントラスト比を求め、比率が高い方の文字色を採用する.
 		// （同値の場合は黒文字を優先する。従来のしきい値比較と同じ挙動）.
@@ -636,35 +642,6 @@ class VkTermColor {
 		$black_contrast_ratio = ( $luminance + 0.05 ) / ( 0.0 + 0.05 );
 
 		return $black_contrast_ratio >= $white_contrast_ratio ? '#000000' : '#FFFFFF';
-	}
-
-	/**
-	 * RGB値（0-255）から WCAG の相対輝度を求める
-	 *
-	 * @param int $r 赤成分（0-255）.
-	 * @param int $g 緑成分（0-255）.
-	 * @param int $b 青成分（0-255）.
-	 * @return float 相対輝度（0.0〜1.0）.
-	 */
-	private static function get_relative_luminance( $r, $g, $b ) {
-		$r_linear = self::srgb_channel_to_linear( $r / 255 );
-		$g_linear = self::srgb_channel_to_linear( $g / 255 );
-		$b_linear = self::srgb_channel_to_linear( $b / 255 );
-
-		return 0.2126 * $r_linear + 0.7152 * $g_linear + 0.0722 * $b_linear;
-	}
-
-	/**
-	 * sRGB の1チャンネル値（0.0〜1.0に正規化済み）をリニア値に変換する（ガンマ補正）
-	 *
-	 * @param float $channel 正規化された1チャンネルの値（0.0〜1.0）.
-	 * @return float リニア値.
-	 */
-	private static function srgb_channel_to_linear( $channel ) {
-		if ( $channel <= 0.03928 ) {
-			return $channel / 12.92;
-		}
-		return pow( ( $channel + 0.055 ) / 1.055, 2.4 );
 	}
 
 
