@@ -339,8 +339,21 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'color'              => true,
             ),
             'correct' => '<div class="vk-term-color-test-single"><span class="vk-term-color-test-single-inner" style="color:#000000;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span></div>'
-        ),                                
-        );          
+        ),
+        // 対象の分類が見つからない状態（get_the_terms() が WP_Error を返す）でも致命的エラーにならず空文字が返る
+        array(
+            'data' => array(
+                'post_title'   => 'Page Title',
+                'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                'post_type'    => 'post',
+                'post_status'  => 'publish',
+                'post_category' => array( $test_category_0['id'] )
+            ),
+            'args' => array(),
+            'force_wp_error' => true,
+            'correct' => ''
+        ),
+        );
 
         print PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
@@ -349,12 +362,25 @@ class VkTermColorTest extends WP_UnitTestCase {
 
         global $post;
 
+        // get_the_terms() の戻り値を強制的に WP_Error にするフィルター（登録されていない taxonomy を渡した場合の再現用）
+        $force_wp_error_terms = function () {
+            return new \WP_Error( 'invalid_taxonomy', __( 'Invalid taxonomy.' ) );
+        };
+
         // テストパターンを順々にテスト
         foreach ( $tests as $test ) {
             $post_id = wp_insert_post( $test['data'] );
             $post = get_post( $post_id );
 
+            if ( ! empty( $test['force_wp_error'] ) ) {
+                add_filter( 'get_the_terms', $force_wp_error_terms );
+            }
+
             $return = VkTermColor::get_auto_post_single_term_html( '', $test['args'] );
+
+            if ( ! empty( $test['force_wp_error'] ) ) {
+                remove_filter( 'get_the_terms', $force_wp_error_terms );
+            }
 
             print 'return  :' . PHP_EOL;
             var_dump( $return );
@@ -460,8 +486,22 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'link'               => false,
                 ),
                 'correct' => '<span style="color:#000000;background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] .'</span>'
-            ),                                     
-        );          
+            ),
+            // vk_term_color_taxonomy フックが登録されていない分類名を返した場合、
+            // get_the_terms() が WP_Error を返しても致命的エラーにならず null が返る
+            array(
+                'data' => array(
+                    'post_title'   => 'Page Title',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'    => 'post',
+                    'post_status'  => 'publish',
+                    'post_category' => array( $test_category_0['id'] )
+                ),
+                'args' => array(),
+                'force_invalid_taxonomy' => true,
+                'correct' => null
+            ),
+        );
 
         print PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
@@ -470,12 +510,25 @@ class VkTermColorTest extends WP_UnitTestCase {
 
         global $post;
 
+        // 登録されていない分類名を返すフィルター（vk_term_color_taxonomy フックの誤設定の再現用）
+        $force_invalid_taxonomy = function () {
+            return 'vk_term_color_nonexistent_taxonomy_for_test';
+        };
+
         // テストパターンを順々にテスト
         foreach ( $tests as $test ) {
             $post_id = wp_insert_post( $test['data'] );
             $post = get_post( $post_id );
-        
+
+            if ( ! empty( $test['force_invalid_taxonomy'] ) ) {
+                add_filter( 'vk_term_color_taxonomy', $force_invalid_taxonomy );
+            }
+
             $return = VkTermColor::get_single_term_with_color( '', $test['args'] );
+
+            if ( ! empty( $test['force_invalid_taxonomy'] ) ) {
+                remove_filter( 'vk_term_color_taxonomy', $force_invalid_taxonomy );
+            }
 
             print 'return  :' . PHP_EOL;
             var_dump( $return );

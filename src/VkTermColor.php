@@ -420,9 +420,12 @@ class VkTermColor {
 			// get $taxonomy name.
 			$taxonomy = key( $taxonomies );
 			$terms    = get_the_terms( $post->ID, $taxonomy );
-			if ( ! empty( $terms[0] ) ) {
-				$single_term_with_color = self::get_post_single_term_html( $terms[0], $args );
+			// 登録されていない taxonomy の場合 get_the_terms() は WP_Error を返すため、
+			// empty() だけでは弾けず配列添字アクセスで致命的エラーになる. is_wp_error() も判定する.
+			if ( is_wp_error( $terms ) || empty( $terms[0] ) ) {
+				return $single_term_with_color;
 			}
+			$single_term_with_color = self::get_post_single_term_html( $terms[0], $args );
 		}
 		return $single_term_with_color;
 	}
@@ -462,7 +465,9 @@ class VkTermColor {
 			// 取得するタームのタクソノミーを指定したい場合はフックで指定
 			$taxonomy = apply_filters( 'vk_term_color_taxonomy', key( $taxonomies ) );
 			$terms    = get_the_terms( $post->ID, $taxonomy );
-			if ( ! $terms ) {
+			// 登録されていない taxonomy の場合 get_the_terms() は WP_Error を返すため、
+			// ! $terms だけでは弾けず配列添字アクセスで致命的エラーになる. is_wp_error() も判定する.
+			if ( is_wp_error( $terms ) || ! $terms ) {
 				return;
 			}
 			$term_name  = esc_html( $terms[0]->name );
