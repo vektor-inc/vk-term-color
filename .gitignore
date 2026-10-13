@@ -1,5 +1,3 @@
-.git
-.gitignote
 node_modules
 vendor
 
@@ -9,3 +7,6 @@ vendor
 
 # AI エージェントがリポジトリ内に作る作業用 worktree はコミットしない。
 **/.claude/worktrees/
+
+# PHPUnit が生成するキャッシュファイルはコミットしない。
+.phpunit.result.cache
