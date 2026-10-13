@@ -2,3 +2,10 @@
 .gitignote
 node_modules
 vendor
+
+# wp-env のローカル上書き設定（開発者ごとのポート等）はコミットしない。
+# .wp-env.override.json / .wp-env.tests.override.json などが該当する。
+*.override.json
+
+# AI エージェントがリポジトリ内に作る作業用 worktree はコミットしない。
+**/.claude/worktrees/
