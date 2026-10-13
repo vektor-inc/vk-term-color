@@ -55,6 +55,8 @@ npm run phpunit
 
 ## Change log
 
+* ターム色の保存処理に、対象タームを編集する権限があるかどうかの確認（current_user_can）を追加
+
 0.7.2
 * 投稿のカテゴリーにて背景色に合わせて動的にテキスト色を決める get_dynamic_text_color() を適用
 * Composer 経由で配布した際、開発用ファイルが vendor/ に含まれないよう .gitattributes を追加

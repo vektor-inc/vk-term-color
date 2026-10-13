@@ -704,6 +704,91 @@ class VkTermColorTest extends WP_UnitTestCase {
     }
 
     /**
+     * Test case save_term_meta_color()
+     * nonce が有効でも、対象タームを編集する権限（edit_term）を持たないユーザーからの
+     * 保存リクエストは拒否されることを確認する。get_term_color_taxonomies() が返す
+     * 複数タクソノミー（標準の category / カスタムタクソノミー）のどちらでも
+     * 同様に機能することもあわせて検証する。
+     *
+     * @return void
+     */
+    public function test_save_term_meta_color() {
+
+        VkTermColor::term_meta_color();
+
+        print PHP_EOL;
+        print '------------------------------------' . PHP_EOL;
+        print 'test_save_term_meta_color()' . PHP_EOL;
+        print '------------------------------------' . PHP_EOL;
+
+        // nonce の action 名は basename( __FILE__ ) ( = 'VkTermColor.php' ) と一致させる必要があるため、
+        // 対象クラスの実ファイル名から動的に取得する（値をテスト側に決め打ちしない）.
+        $nonce_action = basename( ( new ReflectionClass( VkTermColor::class ) )->getFileName() );
+
+        // 検証用タームはケースごとに独立したものを用意する（他ケースの保存結果と混ざらないようにするため）.
+        $custom_taxonomy = $this->test_taxonomies[0]['name'];
+
+        $admin_category_term      = wp_insert_term( 'Permission Check Category Admin', 'category' );
+        $admin_custom_term        = wp_insert_term( 'Permission Check Term Admin', $custom_taxonomy );
+        $subscriber_category_term = wp_insert_term( 'Permission Check Category Subscriber', 'category' );
+        $subscriber_custom_term   = wp_insert_term( 'Permission Check Term Subscriber', $custom_taxonomy );
+
+        // テストパターン
+        $tests = array(
+            array(
+                'test_condition_name' => '対象タクソノミーの編集権限を持つ administrator は category のターム色を保存できる',
+                'role'                 => 'administrator',
+                'term_id'              => $admin_category_term['term_id'],
+                'input'                => 'aa11bb',
+                'expected'             => 'aa11bb',
+            ),
+            array(
+                'test_condition_name' => '対象タクソノミーの編集権限を持つ administrator はカスタムタクソノミーのターム色も保存できる',
+                'role'                 => 'administrator',
+                'term_id'              => $admin_custom_term['term_id'],
+                'input'                => '00cc22',
+                'expected'             => '00cc22',
+            ),
+            array(
+                'test_condition_name' => '編集権限を持たない subscriber は、有効な nonce を持っていても category のターム色を保存できない',
+                'role'                 => 'subscriber',
+                'term_id'              => $subscriber_category_term['term_id'],
+                'input'                => 'ff0000',
+                'expected'             => '', // 未保存（＝タームに term_color メタが一度も設定されていない）ままであることを期待する.
+            ),
+            array(
+                'test_condition_name' => '編集権限を持たない subscriber は、有効な nonce を持っていてもカスタムタクソノミーのターム色を保存できない',
+                'role'                 => 'subscriber',
+                'term_id'              => $subscriber_custom_term['term_id'],
+                'input'                => '0000ff',
+                'expected'             => '',
+            ),
+        );
+
+        foreach ( $tests as $test ) {
+            // 対象ロールのユーザーへ切り替えたうえで、そのユーザー自身の有効な nonce を発行する
+            // （nonce は current_user_id に依存するため、切り替え後に発行しないと検証に失敗する）.
+            $this->set_current_user( $test['role'] );
+            $_POST['term_color_nonce'] = wp_create_nonce( $nonce_action );
+            $_POST['term_color']       = $test['input'];
+
+            VkTermColor::save_term_meta_color( $test['term_id'] );
+
+            $actual = get_term_meta( $test['term_id'], 'term_color', true );
+
+            print 'role, input, expected, actual :' . PHP_EOL;
+            var_dump( $test['role'], $test['input'], $test['expected'], $actual );
+            print PHP_EOL;
+
+            // 保存が許可されたケースでは入力値が保存され、拒否されたケースでは未設定（空文字）のまま
+            // であることを、この1つの比較で同時に検証する.
+            $this->assertSame( $test['expected'], $actual, $test['test_condition_name'] );
+
+            unset( $_POST['term_color_nonce'], $_POST['term_color'] );
+        }
+    }
+
+    /**
      * Test case init()
      * init アクションの実行中（did_action('init') が真）に init() が呼ばれても、
      * term_meta_color() がその場で実行され term_color の sanitize_callback が
