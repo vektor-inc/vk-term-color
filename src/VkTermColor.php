@@ -135,6 +135,13 @@ class VkTermColor {
 			return;
 		}
 
+		// nonce の検証はリクエストが同一ユーザー自身の操作であることの確認に過ぎず、
+		// そのユーザーが対象タームを編集する権限を持つかは別に確認が必要（get_term_color_taxonomies() が返す
+		// タクソノミーごとに必要な capability が異なるため、taxonomy 非依存の edit_term メタ capability で判定する）.
+		if ( ! current_user_can( 'edit_term', $term_id ) ) {
+			return;
+		}
+
 		if ( isset( $_POST['term_color'] ) ) {
 			$now_value = get_term_meta( $term_id, 'term_color', true );
 			$new_value = sanitize_text_field( wp_unslash( $_POST['term_color'] ) );
