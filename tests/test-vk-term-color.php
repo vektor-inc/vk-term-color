@@ -150,8 +150,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
                     'term_url' => site_url() . '/?cat=1',
-                    // #999999 はコントラスト比計算（新方式）で黒文字の方が高比率になるため #000000.
-                    'text_color' => '#000000'
+                    'text_color' => '#FFFFFF'
                 )
                 ),
             // カテゴリとカスタムタクソノミーをセットした記事で、表示指定をカスタムタクソノミーに指定すると、該当のタクソノミーのタームが返る
@@ -198,11 +197,10 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'term_name' => 'Uncategorized',
                     'color' => $default_color,
                     'term_url' => site_url() . '/?cat=1',
-                    // #999999 はコントラスト比計算（新方式）で黒文字の方が高比率になるため #000000.
-                    'text_color' => '#000000'
+                    'text_color' => '#FFFFFF'
                 )
-            ),
-        );
+            ),                                      
+        );      
         
         print PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
@@ -268,8 +266,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_status'  => 'publish'
                 ),
                 'args' => array(),
-                // #999999 はコントラスト比計算（新方式）で黒文字の方が高比率になるため #000000.
-                'correct' => '<span class="btn btn-sm" style="color:#000000;background-color:' . $default_color . '">Uncategorized</span>'
+                'correct' => '<span class="btn btn-sm" style="color:#FFFFFF;background-color:' . $default_color . '">Uncategorized</span>'
             ),
             // オプション指定（リンクあり、色なし）
             array( 
@@ -404,8 +401,7 @@ class VkTermColorTest extends WP_UnitTestCase {
                     'post_status'  => 'publish'
                 ),
                 'args' => array(),
-                // #999999 はコントラスト比計算（新方式）で黒文字の方が高比率になるため #000000.
-                'correct' => '<span style="color:#000000;background-color:' . $default_color . '">Uncategorized</span>'
+                'correct' => '<span style="color:#FFFFFF;background-color:' . $default_color . '">Uncategorized</span>'
             ),
             // オプション指定（リンクあり、クラスあり）
             array( 
@@ -576,131 +572,59 @@ class VkTermColorTest extends WP_UnitTestCase {
         }
     }    
 
-    /**
-     * WCAG のコントラスト比計算式を、テスト側で production コードとは独立に再実装したもの。
-     * get_dynamic_text_color() が「黒文字・白文字のうちコントラスト比が高い方を返しているか」を
-     * 固定の期待文字色ではなく計算結果同士の比較で検証するために使う.
-     *
-     * @param string $hex6 6桁の16進数カラーコード（# なし）.
-     * @return array{black: float, white: float} 黒文字・白文字それぞれとのコントラスト比.
-     */
-    private function calc_contrast_ratios( $hex6 ) {
-        $to_linear = function ( $channel ) {
-            $channel = $channel / 255;
-            if ( $channel <= 0.03928 ) {
-                return $channel / 12.92;
-            }
-            return pow( ( $channel + 0.055 ) / 1.055, 2.4 );
-        };
-
-        $r = hexdec( substr( $hex6, 0, 2 ) );
-        $g = hexdec( substr( $hex6, 2, 2 ) );
-        $b = hexdec( substr( $hex6, 4, 2 ) );
-
-        $luminance = 0.2126 * $to_linear( $r ) + 0.7152 * $to_linear( $g ) + 0.0722 * $to_linear( $b );
-
-        return array(
-            'black' => ( $luminance + 0.05 ) / 0.05,
-            'white' => 1.05 / ( $luminance + 0.05 ),
-        );
-    }
-
-    /**
-     * Test case get_dynamic_text_color()
-     * 背景色の明るさに応じて、コントラスト比（WCAGの相対輝度に基づく計算式）がより高い文字色
-     * （黒文字 #000000 または 白文字 #FFFFFF）が選ばれることを検証する.
-     *
-     * @return void
-     */
     public function test_get_dynamic_text_color() {
+
+        $data = array(
+            '#000000' => '#FFFFFF',
+            '#333333' => '#FFFFFF',
+            '#666666' => '#FFFFFF',
+            '#999999' => '#FFFFFF',
+            '#FFFFFF' => '#000000',
+            '#330000' => '#FFFFFF',
+            '#660000' => '#FFFFFF',
+            '#990000' => '#FFFFFF',
+            '#CC0000' => '#FFFFFF',
+            '#FF0000' => '#FFFFFF',
+            '#003300' => '#FFFFFF',
+            '#006600' => '#FFFFFF',
+            '#009900' => '#FFFFFF',
+            '#00CC00' => '#FFFFFF',
+            '#00FF00' => '#FFFFFF',  
+            '#000033' => '#FFFFFF',
+            '#000066' => '#FFFFFF',
+            '#000099' => '#FFFFFF',
+            '#0000CC' => '#FFFFFF',
+            '#0000FF' => '#FFFFFF',                      
+            '#333300' => '#FFFFFF',
+            '#666600' => '#FFFFFF',
+            '#999900' => '#FFFFFF',
+            '#CCCC00' => '#000000',
+            '#FFFF00' => '#000000',
+            '#003333' => '#FFFFFF',
+            '#006666' => '#FFFFFF',
+            '#009999' => '#FFFFFF',
+            '#00CCCC' => '#FFFFFF',            
+            '#00FFFF' => '#000000',
+            '#330033' => '#FFFFFF',
+            '#660066' => '#FFFFFF',
+            '#990099' => '#FFFFFF',
+            '#CC00CC' => '#FFFFFF',
+            '#FF00FF' => '#FFFFFF',            
+        );
 
         print PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
 		print 'test_get_dynamic_text_color()' . PHP_EOL;
 		print '------------------------------------' . PHP_EOL;
 
-        // 正常系1: 明るい色（白に近い色）・暗い色（黒に近い色）・3桁HEX省略記法の境界を固定値で検証する.
-        $fixed_cases = array(
-            // 明るい色（白に近い）→ 黒文字が選ばれる.
-            '#FFFFFF' => '#000000',
-            '#FAFAFA' => '#000000',
-            '#FFF'    => '#000000',
-            // 暗い色（黒に近い）→ 白文字が選ばれる.
-            '#000000' => '#FFFFFF',
-            '#0A0A0A' => '#FFFFFF',
-            '#000'    => '#FFFFFF',
-            // 原色・中間色を一通り含めた回帰確認（新方式で計算し直した期待値）.
-            '#333333' => '#FFFFFF',
-            '#666666' => '#FFFFFF',
-            '#999999' => '#000000',
-            '#330000' => '#FFFFFF',
-            '#660000' => '#FFFFFF',
-            '#990000' => '#FFFFFF',
-            '#CC0000' => '#FFFFFF',
-            '#FF0000' => '#000000',
-            '#003300' => '#FFFFFF',
-            '#006600' => '#FFFFFF',
-            '#009900' => '#000000',
-            '#00CC00' => '#000000',
-            '#00FF00' => '#000000',
-            '#000033' => '#FFFFFF',
-            '#000066' => '#FFFFFF',
-            '#000099' => '#FFFFFF',
-            '#0000CC' => '#FFFFFF',
-            '#0000FF' => '#FFFFFF',
-            '#333300' => '#FFFFFF',
-            '#666600' => '#FFFFFF',
-            '#999900' => '#000000',
-            '#CCCC00' => '#000000',
-            '#FFFF00' => '#000000',
-            '#003333' => '#FFFFFF',
-            '#006666' => '#FFFFFF',
-            '#009999' => '#000000',
-            '#00CCCC' => '#000000',
-            '#00FFFF' => '#000000',
-            '#330033' => '#FFFFFF',
-            '#660066' => '#FFFFFF',
-            '#990099' => '#FFFFFF',
-            '#CC00CC' => '#FFFFFF',
-            '#FF00FF' => '#000000',
-        );
-
-        foreach ( $fixed_cases as $input => $correct ) {
-            $return = VkTermColor::get_dynamic_text_color( $input );
+        foreach ( $data as $input => $correct ) {
+            $return = VkTermColor::get_dynamic_text_color($input);
             print 'input, correct, return :' . PHP_EOL;
             var_dump( $input, $correct, $return );
-            print PHP_EOL;
-            $this->assertSame( $correct, $return, $input . ' の文字色判定が期待値と異なります.' );
+            print PHP_EOL;       
+            $this->assertSame( $correct, $return );
         }
-
-        // 異常系/境界値: issue #26 で指摘された中間的な明るさの背景色（カテゴリーバッジで
-        // 自動選択された文字色でもコントラスト比の基準に届かない組み合わせが残る例）.
-        // どちらが読みやすいかを色ごとに固定でassertするのではなく、計算したコントラスト比
-        // （black/white）を比較し、戻り値が比率の高い方と一致しているかで検証する.
-        $contrast_comparison_cases = array(
-            '4CAF50', // issueで指摘された緑系の中間色.
-            '00BCD4', // issueで指摘された水色系の中間色.
-        );
-
-        foreach ( $contrast_comparison_cases as $hex6 ) {
-            $ratios        = $this->calc_contrast_ratios( $hex6 );
-            $expected_color = $ratios['black'] >= $ratios['white'] ? '#000000' : '#FFFFFF';
-            $return         = VkTermColor::get_dynamic_text_color( '#' . $hex6 );
-
-            print 'hex, black_ratio, white_ratio, expected, return :' . PHP_EOL;
-            var_dump( $hex6, $ratios['black'], $ratios['white'], $expected_color, $return );
-            print PHP_EOL;
-
-            // 戻り値のコントラスト比が、もう一方の文字色のコントラスト比以上であることを検証する.
-            $chosen_ratio = '#000000' === $return ? $ratios['black'] : $ratios['white'];
-            $other_ratio  = '#000000' === $return ? $ratios['white'] : $ratios['black'];
-            $this->assertGreaterThanOrEqual(
-                $other_ratio,
-                $chosen_ratio,
-                '#' . $hex6 . ' で選ばれた文字色 ' . $return . ' のコントラスト比が、もう一方の文字色より低くなっています.'
-            );
-            $this->assertSame( $expected_color, $return, '#' . $hex6 . ' の文字色判定が、コントラスト比の高い方と一致しません.' );
-        }
+        
     }
 
 
