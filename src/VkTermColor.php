@@ -607,26 +607,64 @@ class VkTermColor {
 
 	/**
 	 * Hex値を受け取りテキスト色を判定する
+	 * 背景色に対する黒文字・白文字それぞれのコントラスト比（WCAGの相対輝度に基づく計算式）を求め、
+	 * コントラスト比が高い方の文字色を返す
 	 *
-	 * @param [type] $rgb
-	 * @return void
+	 * @param string $hex 背景色の16進数カラーコード（# の有無・3桁/6桁のどちらも可）.
+	 * @return string 選択した文字色の16進数カラーコード（#000000 または #FFFFFF）.
 	 */
 	public static function get_dynamic_text_color($hex) {
 
 		$hex = str_replace("#", "", $hex);
-	
+
 		// 3桁の場合は6桁に変換
 		if (strlen($hex) == 3) {
 			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
 		}
-	
+
 		// 16進数からRGB値に変換
 		$r = hexdec(substr($hex, 0, 2));
 		$g = hexdec(substr($hex, 2, 2));
-		$b = hexdec(substr($hex, 4, 2));	
+		$b = hexdec(substr($hex, 4, 2));
 
-		$yiq = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
-		return $yiq >= 156 ? '#000000' : '#FFFFFF';
+		// 背景色の相対輝度（WCAGの計算式）を求める.
+		$luminance = self::get_relative_luminance( $r, $g, $b );
+
+		// 黒文字・白文字それぞれとのコントラスト比を求め、比率が高い方の文字色を採用する.
+		// （同値の場合は黒文字を優先する。従来のしきい値比較と同じ挙動）.
+		$white_contrast_ratio = ( 1.0 + 0.05 ) / ( $luminance + 0.05 );
+		$black_contrast_ratio = ( $luminance + 0.05 ) / ( 0.0 + 0.05 );
+
+		return $black_contrast_ratio >= $white_contrast_ratio ? '#000000' : '#FFFFFF';
+	}
+
+	/**
+	 * RGB値（0-255）から WCAG の相対輝度を求める
+	 *
+	 * @param int $r 赤成分（0-255）.
+	 * @param int $g 緑成分（0-255）.
+	 * @param int $b 青成分（0-255）.
+	 * @return float 相対輝度（0.0〜1.0）.
+	 */
+	private static function get_relative_luminance( $r, $g, $b ) {
+		$r_linear = self::srgb_channel_to_linear( $r / 255 );
+		$g_linear = self::srgb_channel_to_linear( $g / 255 );
+		$b_linear = self::srgb_channel_to_linear( $b / 255 );
+
+		return 0.2126 * $r_linear + 0.7152 * $g_linear + 0.0722 * $b_linear;
+	}
+
+	/**
+	 * sRGB の1チャンネル値（0.0〜1.0に正規化済み）をリニア値に変換する（ガンマ補正）
+	 *
+	 * @param float $channel 正規化された1チャンネルの値（0.0〜1.0）.
+	 * @return float リニア値.
+	 */
+	private static function srgb_channel_to_linear( $channel ) {
+		if ( $channel <= 0.03928 ) {
+			return $channel / 12.92;
+		}
+		return pow( ( $channel + 0.055 ) / 1.055, 2.4 );
 	}
 
 
