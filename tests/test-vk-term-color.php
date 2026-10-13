@@ -625,8 +625,21 @@ class VkTermColorTest extends WP_UnitTestCase {
         }
     }    
 
+    /**
+     * Test case get_dynamic_text_color()
+     * 既存の有効な6桁カラーコードの判定結果が1件も変わっていないこと（回帰防止）に加え、
+     * 3桁カラーコードの判定、および不正な入力（文字列以外・桁数不正・16進数として
+     * 解釈できない文字列）を渡してもPHPの警告・致命的エラーにならず、決めた既定値
+     * （#FFFFFF）にフォールバックすることを検証する.
+     * phpunit.xml.dist で notice/warning が例外化されているため、警告が1件でも
+     * 出ればこのテスト自体が失敗する.
+     *
+     * @return void
+     */
     public function test_get_dynamic_text_color() {
 
+        // 既存の有効な6桁カラーコード（修正前から変わらず存在するテーブル）.
+        // このテーブルの戻り値は1件も変更しない（入力確認の追加で既存の正常系を壊していないことの固定）.
         $data = array(
             '#000000' => '#FFFFFF',
             '#333333' => '#FFFFFF',
@@ -642,12 +655,12 @@ class VkTermColorTest extends WP_UnitTestCase {
             '#006600' => '#FFFFFF',
             '#009900' => '#FFFFFF',
             '#00CC00' => '#FFFFFF',
-            '#00FF00' => '#FFFFFF',  
+            '#00FF00' => '#FFFFFF',
             '#000033' => '#FFFFFF',
             '#000066' => '#FFFFFF',
             '#000099' => '#FFFFFF',
             '#0000CC' => '#FFFFFF',
-            '#0000FF' => '#FFFFFF',                      
+            '#0000FF' => '#FFFFFF',
             '#333300' => '#FFFFFF',
             '#666600' => '#FFFFFF',
             '#999900' => '#FFFFFF',
@@ -656,13 +669,66 @@ class VkTermColorTest extends WP_UnitTestCase {
             '#003333' => '#FFFFFF',
             '#006666' => '#FFFFFF',
             '#009999' => '#FFFFFF',
-            '#00CCCC' => '#FFFFFF',            
+            '#00CCCC' => '#FFFFFF',
             '#00FFFF' => '#000000',
             '#330033' => '#FFFFFF',
             '#660066' => '#FFFFFF',
             '#990099' => '#FFFFFF',
             '#CC00CC' => '#FFFFFF',
-            '#FF00FF' => '#FFFFFF',            
+            '#FF00FF' => '#FFFFFF',
+        );
+
+        // 3桁カラーコード（省略形）. 対応する6桁カラーコードと同じ判定結果になることを固定する.
+        $short_hand_data = array(
+            '#000' => '#FFFFFF', // #000000 と同じ
+            '#333' => '#FFFFFF', // #333333 と同じ
+            '#999' => '#FFFFFF', // #999999 と同じ（プラグインの既定背景色）
+            '#FFF' => '#000000', // #FFFFFF と同じ
+            '#F00' => '#FFFFFF', // #FF0000 と同じ
+            '#0F0' => '#FFFFFF', // #00FF00 と同じ
+            '#00F' => '#FFFFFF', // #0000FF と同じ
+            '#FF0' => '#000000', // #FFFF00 と同じ
+            '#0FF' => '#000000', // #00FFFF と同じ
+            '#F0F' => '#FFFFFF', // #FF00FF と同じ
+        );
+
+        // 不正な入力のテストケース（入力の型・値が様々なため input をキーではなく値として持つ）.
+        $invalid_cases = array(
+            array(
+                'test_condition_name' => 'null を渡しても警告にならず既定値が返る',
+                'input'                => null,
+                'expected'             => '#FFFFFF',
+            ),
+            array(
+                'test_condition_name' => '配列を渡しても TypeError にならず既定値が返る',
+                'input'                => array( '#ff0000' ),
+                'expected'             => '#FFFFFF',
+            ),
+            array(
+                'test_condition_name' => '数値を渡しても既定値が返る',
+                'input'                => 999999,
+                'expected'             => '#FFFFFF',
+            ),
+            array(
+                'test_condition_name' => '16進数として解釈できない文字列（色名）は既定値が返る',
+                'input'                => 'red',
+                'expected'             => '#FFFFFF',
+            ),
+            array(
+                'test_condition_name' => '4桁（桁数不正）は青成分を0扱いにせず既定値が返る',
+                'input'                => '#abcd',
+                'expected'             => '#FFFFFF',
+            ),
+            array(
+                'test_condition_name' => '8桁（桁数不正）も既定値が返る',
+                'input'                => '#ff0000ff',
+                'expected'             => '#FFFFFF',
+            ),
+            array(
+                'test_condition_name' => '空文字も既定値が返る',
+                'input'                => '',
+                'expected'             => '#FFFFFF',
+            ),
         );
 
         print PHP_EOL;
@@ -674,10 +740,25 @@ class VkTermColorTest extends WP_UnitTestCase {
             $return = VkTermColor::get_dynamic_text_color($input);
             print 'input, correct, return :' . PHP_EOL;
             var_dump( $input, $correct, $return );
-            print PHP_EOL;       
-            $this->assertSame( $correct, $return );
+            print PHP_EOL;
+            $this->assertSame( $correct, $return, $input . ' の判定結果が変わっていないこと' );
         }
-        
+
+        foreach ( $short_hand_data as $input => $correct ) {
+            $return = VkTermColor::get_dynamic_text_color( $input );
+            print 'input(3桁), correct, return :' . PHP_EOL;
+            var_dump( $input, $correct, $return );
+            print PHP_EOL;
+            $this->assertSame( $correct, $return, $input . ' （3桁）の判定結果' );
+        }
+
+        foreach ( $invalid_cases as $case ) {
+            $return = VkTermColor::get_dynamic_text_color( $case['input'] );
+            print 'input(不正値), expected, return :' . PHP_EOL;
+            var_dump( $case['input'], $case['expected'], $return );
+            print PHP_EOL;
+            $this->assertSame( $case['expected'], $return, $case['test_condition_name'] );
+        }
     }
 
 
