@@ -607,41 +607,26 @@ class VkTermColor {
 
 	/**
 	 * Hex値を受け取りテキスト色を判定する
-	 * 背景色に対する黒文字・白文字それぞれのコントラスト比（WCAGの相対輝度に基づく計算式）を求め、
-	 * コントラスト比が高い方の文字色を返す
 	 *
-	 * @param string $hex 背景色の16進数カラーコード（# の有無・3桁/6桁のどちらも可）.
-	 * @return string 選択した文字色の16進数カラーコード（#000000 または #FFFFFF）.
+	 * @param [type] $rgb
+	 * @return void
 	 */
 	public static function get_dynamic_text_color($hex) {
 
 		$hex = str_replace("#", "", $hex);
-
+	
 		// 3桁の場合は6桁に変換
 		if (strlen($hex) == 3) {
 			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
 		}
-
+	
 		// 16進数からRGB値に変換
 		$r = hexdec(substr($hex, 0, 2));
 		$g = hexdec(substr($hex, 2, 2));
-		$b = hexdec(substr($hex, 4, 2));
+		$b = hexdec(substr($hex, 4, 2));	
 
-		// 背景色の相対輝度（WCAGの計算式）を求める.
-		// 各チャンネルを 0.0〜1.0 に正規化してガンマ補正（リニア値に変換）したうえで加重合計する.
-		$linear = array();
-		foreach ( array( $r, $g, $b ) as $channel ) {
-			$channel  = $channel / 255;
-			$linear[] = $channel <= 0.03928 ? $channel / 12.92 : pow( ( $channel + 0.055 ) / 1.055, 2.4 );
-		}
-		$luminance = 0.2126 * $linear[0] + 0.7152 * $linear[1] + 0.0722 * $linear[2];
-
-		// 黒文字・白文字それぞれとのコントラスト比を求め、比率が高い方の文字色を採用する.
-		// （同値の場合は黒文字を優先する。従来のしきい値比較と同じ挙動）.
-		$white_contrast_ratio = ( 1.0 + 0.05 ) / ( $luminance + 0.05 );
-		$black_contrast_ratio = ( $luminance + 0.05 ) / ( 0.0 + 0.05 );
-
-		return $black_contrast_ratio >= $white_contrast_ratio ? '#000000' : '#FFFFFF';
+		$yiq = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+		return $yiq >= 156 ? '#000000' : '#FFFFFF';
 	}
 
 
