@@ -518,8 +518,11 @@ class VkTermColor {
 	 */
 	public static function get_post_terms_html( $post = '', $args = array() ) {
 
+		// 投稿ID・投稿オブジェクト・未指定（グローバルの投稿を使用）のいずれでも WP_Post に正規化する.
+		// グローバルの投稿が存在しない場合（ループ外・404ページ等）は null になる.
+		$post = get_post( $post );
 		if ( ! $post ) {
-			global $post;
+			return;
 		}
 
 		$args_default = array(
