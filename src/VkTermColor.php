@@ -611,26 +611,45 @@ class VkTermColor {
 	}
 
 	/**
-	 * Hex値を受け取りテキスト色を判定する
+	 * 背景色（Hex値）を受け取り、視認性の高い文字色（黒 or 白）を自動判定する
 	 *
-	 * @param [type] $rgb
-	 * @return void
+	 * @param mixed $hex 背景色のカラーコード（'#ffffff' 等の6桁、'#fff' 等の3桁。# は無くてもよい）.
+	 * @return string #000000 または #FFFFFF.
 	 */
-	public static function get_dynamic_text_color($hex) {
+	public static function get_dynamic_text_color( $hex ) {
 
-		$hex = str_replace("#", "", $hex);
-	
-		// 3桁の場合は6桁に変換
-		if (strlen($hex) == 3) {
+		// term_color_default_custom フィルターの実装ミス（return忘れでnullになる等）で
+		// 文字列以外（null・配列・数値等）が渡ることがあるため、文字列関数に渡す前に弾く.
+		// 不正な値のフォールバック先は、このプラグインの既定背景色 #999999 を渡した場合と
+		// 同じ判定結果（#FFFFFF）にそろえている.
+		if ( ! is_string( $hex ) ) {
+			return '#FFFFFF';
+		}
+
+		// str_replace( '#', '', $hex ) だと文字列中の # を全て除去してしまい、
+		// '#F#F#F' のような途中に # を含む壊れた値が 'FFF' になって後続の桁数チェックを
+		// すり抜けてしまう（CodeRabbit 指摘）. 除去するのは先頭の # 1個だけにする.
+		if ( '#' === substr( $hex, 0, 1 ) ) {
+			$hex = substr( $hex, 1 );
+		}
+
+		// 3桁・6桁以外（4桁等の桁数不正）や、16進数として解釈できない文字列（'red' 等）も
+		// 同様に弾く（4桁のまま substr() すると青成分が0扱いになり誤判定するため、桁数チェックが必須）.
+		if ( ! preg_match( '/^(?:[A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\z/', $hex ) ) {
+			return '#FFFFFF';
+		}
+
+		// 3桁の場合は6桁に変換.
+		if ( 3 === strlen( $hex ) ) {
 			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
 		}
-	
-		// 16進数からRGB値に変換
-		$r = hexdec(substr($hex, 0, 2));
-		$g = hexdec(substr($hex, 2, 2));
-		$b = hexdec(substr($hex, 4, 2));	
 
-		$yiq = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+		// 16進数からRGB値に変換.
+		$r = hexdec( substr( $hex, 0, 2 ) );
+		$g = hexdec( substr( $hex, 2, 2 ) );
+		$b = hexdec( substr( $hex, 4, 2 ) );
+
+		$yiq = ( ( $r * 299 ) + ( $g * 587 ) + ( $b * 114 ) ) / 1000;
 		return $yiq >= 156 ? '#000000' : '#FFFFFF';
 	}
 
