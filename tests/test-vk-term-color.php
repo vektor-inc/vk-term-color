@@ -729,6 +729,28 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'input'                => '',
                 'expected'             => '#FFFFFF',
             ),
+            array(
+                // CodeRabbit 指摘（PR#36）の回帰テスト.
+                // str_replace( '#', '', $hex ) で全ての # を除去していた旧実装だと
+                // '#F#F#F' が 'FFF' になり、3桁の有効なカラーコードとして誤って通ってしまっていた.
+                'test_condition_name' => '途中に # を含む壊れた値（#F#F#F）は 3桁カラーコードとして通らず既定値が返る',
+                'input'                => '#F#F#F',
+                'expected'             => '#FFFFFF',
+            ),
+            array(
+                'test_condition_name' => '先頭に # が2個連続する壊れた値（##000）も既定値が返る（先頭の#は1個しか除去しない）',
+                'input'                => '##000',
+                'expected'             => '#FFFFFF',
+            ),
+        );
+
+        // 先頭の # だけを1個除去する実装に変更した後も、通常の入力（# なし・先頭に # 1個）の
+        // 判定結果が変わっていないことを確認するための回帰データ.
+        $leading_hash_data = array(
+            'FFFFFF' => '#000000', // # なし・6桁
+            'fff'    => '#000000', // # なし・3桁
+            '#999999' => '#FFFFFF', // 先頭 # 1個・6桁
+            '#999'    => '#FFFFFF', // 先頭 # 1個・3桁
         );
 
         print PHP_EOL;
@@ -750,6 +772,14 @@ class VkTermColorTest extends WP_UnitTestCase {
             var_dump( $input, $correct, $return );
             print PHP_EOL;
             $this->assertSame( $correct, $return, $input . ' （3桁）の判定結果' );
+        }
+
+        foreach ( $leading_hash_data as $input => $correct ) {
+            $return = VkTermColor::get_dynamic_text_color( $input );
+            print 'input(#なし/先頭#1個), correct, return :' . PHP_EOL;
+            var_dump( $input, $correct, $return );
+            print PHP_EOL;
+            $this->assertSame( $correct, $return, $input . ' の判定結果（先頭の#除去を1個だけに変更後も不変）' );
         }
 
         foreach ( $invalid_cases as $case ) {

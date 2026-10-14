@@ -619,14 +619,19 @@ class VkTermColor {
 	public static function get_dynamic_text_color( $hex ) {
 
 		// term_color_default_custom フィルターの実装ミス（return忘れでnullになる等）で
-		// 文字列以外（null・配列・数値等）が渡ることがあるため、str_replace() に渡す前に弾く.
+		// 文字列以外（null・配列・数値等）が渡ることがあるため、文字列関数に渡す前に弾く.
 		// 不正な値のフォールバック先は、このプラグインの既定背景色 #999999 を渡した場合と
 		// 同じ判定結果（#FFFFFF）にそろえている.
 		if ( ! is_string( $hex ) ) {
 			return '#FFFFFF';
 		}
 
-		$hex = str_replace( '#', '', $hex );
+		// str_replace( '#', '', $hex ) だと文字列中の # を全て除去してしまい、
+		// '#F#F#F' のような途中に # を含む壊れた値が 'FFF' になって後続の桁数チェックを
+		// すり抜けてしまう（CodeRabbit 指摘）. 除去するのは先頭の # 1個だけにする.
+		if ( '#' === substr( $hex, 0, 1 ) ) {
+			$hex = substr( $hex, 1 );
+		}
 
 		// 3桁・6桁以外（4桁等の桁数不正）や、16進数として解釈できない文字列（'red' 等）も
 		// 同様に弾く（4桁のまま substr() すると青成分が0扱いになり誤判定するため、桁数チェックが必須）.
