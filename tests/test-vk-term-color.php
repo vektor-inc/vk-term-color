@@ -242,6 +242,10 @@ class VkTermColorTest extends WP_UnitTestCase {
         $default_color = VkTermColor::get_default_color();
 
         $test_category_0 = $this->test_terms['categories'][0];
+        $test_category_1 = $this->test_terms['categories'][1];
+
+        // 期待するテキスト色は実際の関数から算出する（ハードコードの決め打ちを避ける）
+        $text_color_1 = VkTermColor::get_dynamic_text_color( $test_category_1['color'] );
 
         // テストパターン
         $tests = array(
@@ -353,6 +357,30 @@ class VkTermColorTest extends WP_UnitTestCase {
             'force_wp_error' => true,
             'correct' => ''
         ),
+        // グローバルの投稿が存在しない状態（ループ外・404ページ・検索結果0件等）で、投稿を指定せず呼び出しても、
+        // 警告（Attempt to read property "ID" on null）を出さず、空文字列が返ること（issue #38 の再現ケース）
+        array(
+            'data'           => null, // 投稿は作成しない
+            'args'           => array(),
+            'call_param'     => '',
+            'no_global_post' => true,
+            'correct'        => '',
+        ),
+        // 投稿IDを直接指定した場合：グローバルの投稿が無くても、渡したIDの投稿からタクソノミーが
+        // 自動検出され、正しく出力されること
+        array(
+            'data' => array(
+                'post_title'    => 'Page By Id Auto Taxonomy',
+                'post_content'  => '<!-- wp:paragraph --><p>This is another page.</p><!-- /wp:paragraph -->',
+                'post_type'     => 'post',
+                'post_status'   => 'publish',
+                'post_category' => array( $test_category_1['id'] ),
+            ),
+            'args'           => array(),
+            'call_param'     => 'own_id',
+            'no_global_post' => true,
+            'correct'        => '<span class="btn btn-sm" style="color:' . $text_color_1 . ';background-color:' . $test_category_1['color'] . '">' . $test_category_1['name'] . '</span>',
+        ),
         );
 
         print PHP_EOL;
@@ -361,6 +389,7 @@ class VkTermColorTest extends WP_UnitTestCase {
 		print '------------------------------------' . PHP_EOL;
 
         global $post;
+        $backup_post = $post;
 
         // get_the_terms() の戻り値を強制的に WP_Error にするフィルター（登録されていない taxonomy を渡した場合の再現用）
         $force_wp_error_terms = function () {
@@ -369,14 +398,27 @@ class VkTermColorTest extends WP_UnitTestCase {
 
         // テストパターンを順々にテスト
         foreach ( $tests as $test ) {
-            $post_id = wp_insert_post( $test['data'] );
-            $post = get_post( $post_id );
+
+            $post_id = null;
+            if ( null !== $test['data'] ) {
+                $post_id = wp_insert_post( $test['data'] );
+            }
+
+            // グローバルの投稿を準備（ケースにより、無し / 作成した投稿）
+            if ( ! empty( $test['no_global_post'] ) ) {
+                $post = null;
+            } else {
+                $post = get_post( $post_id );
+            }
+
+            // 第1引数（$post）を組み立て（指定が無いケースは従来どおり空文字＝グローバルの投稿を使う）
+            $call_post = ( isset( $test['call_param'] ) && 'own_id' === $test['call_param'] ) ? $post_id : '';
 
             if ( ! empty( $test['force_wp_error'] ) ) {
                 add_filter( 'get_the_terms', $force_wp_error_terms );
             }
 
-            $return = VkTermColor::get_auto_post_single_term_html( '', $test['args'] );
+            $return = VkTermColor::get_auto_post_single_term_html( $call_post, $test['args'] );
 
             if ( ! empty( $test['force_wp_error'] ) ) {
                 remove_filter( 'get_the_terms', $force_wp_error_terms );
@@ -391,6 +433,9 @@ class VkTermColorTest extends WP_UnitTestCase {
             $this->assertSame( $test['correct'], $return );
 
         }
+
+        // 他のテストへグローバルの投稿を持ち越さない
+        $post = $backup_post;
 	}
 
 	/**
@@ -516,6 +561,10 @@ class VkTermColorTest extends WP_UnitTestCase {
         $default_color = VkTermColor::get_default_color();
 
         $test_category_0 = $this->test_terms['categories'][0];
+        $test_category_1 = $this->test_terms['categories'][1];
+
+        // 期待するテキスト色は実際の関数から算出する（ハードコードの決め打ちを避ける）
+        $text_color_1 = VkTermColor::get_dynamic_text_color( $test_category_1['color'] );
 
         // テストパターン
         $tests = array(
@@ -614,6 +663,30 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'force_invalid_taxonomy' => true,
                 'correct' => null
             ),
+            // グローバルの投稿が存在しない状態（ループ外・404ページ・検索結果0件等）で、投稿を指定せず呼び出しても、
+            // 警告（Attempt to read property "ID" on null）を出さず、null が返ること（issue #38 の再現ケース）
+            array(
+                'data'           => null, // 投稿は作成しない
+                'args'           => array(),
+                'call_param'     => '',
+                'no_global_post' => true,
+                'correct'        => null,
+            ),
+            // 投稿IDを直接指定した場合：グローバルの投稿が無くても、渡したIDの投稿のタームが
+            // 正しく出力されること
+            array(
+                'data' => array(
+                    'post_title'    => 'Page By Id',
+                    'post_content'  => '<!-- wp:paragraph --><p>This is another page.</p><!-- /wp:paragraph -->',
+                    'post_type'     => 'post',
+                    'post_status'   => 'publish',
+                    'post_category' => array( $test_category_1['id'] ),
+                ),
+                'args'           => array(),
+                'call_param'     => 'own_id',
+                'no_global_post' => true,
+                'correct'        => '<span style="color:' . $text_color_1 . ';background-color:' . $test_category_1['color'] . '">' . $test_category_1['name'] . '</span>',
+            ),
         );
 
         print PHP_EOL;
@@ -622,6 +695,7 @@ class VkTermColorTest extends WP_UnitTestCase {
 		print '------------------------------------' . PHP_EOL;
 
         global $post;
+        $backup_post = $post;
 
         // 登録されていない分類名を返すフィルター（vk_term_color_taxonomy フックの誤設定の再現用）
         $force_invalid_taxonomy = function () {
@@ -630,14 +704,27 @@ class VkTermColorTest extends WP_UnitTestCase {
 
         // テストパターンを順々にテスト
         foreach ( $tests as $test ) {
-            $post_id = wp_insert_post( $test['data'] );
-            $post = get_post( $post_id );
+
+            $post_id = null;
+            if ( null !== $test['data'] ) {
+                $post_id = wp_insert_post( $test['data'] );
+            }
+
+            // グローバルの投稿を準備（ケースにより、無し / 作成した投稿）
+            if ( ! empty( $test['no_global_post'] ) ) {
+                $post = null;
+            } else {
+                $post = get_post( $post_id );
+            }
+
+            // 第1引数（$post）を組み立て（指定が無いケースは従来どおり空文字＝グローバルの投稿を使う）
+            $call_post = ( isset( $test['call_param'] ) && 'own_id' === $test['call_param'] ) ? $post_id : '';
 
             if ( ! empty( $test['force_invalid_taxonomy'] ) ) {
                 add_filter( 'vk_term_color_taxonomy', $force_invalid_taxonomy );
             }
 
-            $return = VkTermColor::get_single_term_with_color( '', $test['args'] );
+            $return = VkTermColor::get_single_term_with_color( $call_post, $test['args'] );
 
             if ( ! empty( $test['force_invalid_taxonomy'] ) ) {
                 remove_filter( 'vk_term_color_taxonomy', $force_invalid_taxonomy );
@@ -652,6 +739,9 @@ class VkTermColorTest extends WP_UnitTestCase {
             $this->assertSame( $test['correct'], $return );
 
         }
+
+        // 他のテストへグローバルの投稿を持ち越さない
+        $post = $backup_post;
 	}
 
   /**

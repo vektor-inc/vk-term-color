@@ -398,8 +398,11 @@ class VkTermColor {
 	 * @return string .
 	 */
 	public static function get_auto_post_single_term_html( $post = '', $args = array() ) {
+		// 投稿ID・投稿オブジェクト・未指定（グローバルの投稿を使用）のいずれでも WP_Post に正規化する.
+		// グローバルの投稿が存在しない場合（ループ外・404ページ等）は null になる.
+		$post = get_post( $post );
 		if ( ! $post ) {
-			global $post;
+			return '';
 		}
 
 		$args_default = array(
@@ -411,7 +414,10 @@ class VkTermColor {
 		);
 		$args         = wp_parse_args( $args, $args_default );
 
-		$taxonomies = get_the_taxonomies();
+		// タクソノミー自動検出.
+		// 引数を省略すると get_the_taxonomies() はグローバルの投稿を見るため、
+		// 正規化済みの $post を明示的に渡す（グローバルの投稿が無い場合に自動検出できなくなるのを防ぐ）.
+		$taxonomies = get_the_taxonomies( $post );
 		$taxonomies = self::get_display_taxonomies_exclusion( $taxonomies, array( 'post_tag', 'product_type' ) );
 
 
@@ -441,8 +447,11 @@ class VkTermColor {
 	 * @return void
 	 */
 	public static function get_single_term_with_color( $post = '', $args = array() ) {
+		// 投稿ID・投稿オブジェクト・未指定（グローバルの投稿を使用）のいずれでも WP_Post に正規化する.
+		// グローバルの投稿が存在しない場合（ループ外・404ページ等）は null になる.
+		$post = get_post( $post );
 		if ( ! $post ) {
-			global $post;
+			return;
 		}
 
 		$args_default = array(
