@@ -447,6 +447,23 @@ class VkTermColorTest extends WP_UnitTestCase {
                 'no_global_post' => true,
                 'correct'        => null,
             ),
+            // 投稿IDを直接指定し、taxonomy を省略（自動検出）、グローバルの投稿が無い状態でも、
+            // 渡した投稿のタームが正しく自動検出されて出力されること（PR#37 CodeRabbit指摘の回帰テスト）
+            // get_the_taxonomies() は引数省略時にグローバルの投稿を見るため、正規化前の状態を参照すると
+            // 自動検出に失敗し、本来表示されるべきタームが何も表示されなくなる不具合があった.
+            array(
+                'data' => array(
+                    'post_title'    => 'Page By Id Auto Taxonomy',
+                    'post_content' => '<!-- wp:paragraph --><p>This is another page.</p><!-- /wp:paragraph -->',
+                    'post_type'     => 'post',
+                    'post_status'   => 'publish',
+                    'post_category' => array( $test_category_0['id'] ),
+                ),
+                'args'           => array(), // taxonomy 未指定 => 自動検出
+                'call_param'     => 'own_id',
+                'no_global_post' => true,
+                'correct'        => '<div><span class="btn btn-sm" style="color:' . $text_color_0 . ';background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] . '</span></div>',
+            ),
         );
 
         print PHP_EOL;

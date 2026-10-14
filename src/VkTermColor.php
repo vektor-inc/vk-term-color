@@ -540,9 +540,11 @@ class VkTermColor {
 		$args         = wp_parse_args( $args, $args_default );
 
 		// タクソノミー指定がない場合に自動検出.
+		// 引数を省略すると get_the_taxonomies() はグローバルの投稿を見るため、
+		// 正規化済みの $post を明示的に渡す（グローバルの投稿が無い場合に自動検出できなくなるのを防ぐ）.
 		$taxonomy = '';
 		if ( empty( $args['taxonomy'] ) ) {
-			$taxonomies = get_the_taxonomies();
+			$taxonomies = get_the_taxonomies( $post );
 			if ( $taxonomies ) {
 				// get $taxonomy name.
 				$taxonomy = key( $taxonomies );
