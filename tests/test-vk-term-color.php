@@ -393,8 +393,121 @@ class VkTermColorTest extends WP_UnitTestCase {
         }
 	}
 
+	/**
+	 * Test case get_post_terms_html()
+	 * 投稿を指定せず呼び出した場合のグローバル投稿への正規化を検証する（issue #31 の再現ケースを含む）
+	 *
+	 * @return void
+	 */
+	public function test_get_post_terms_html() {
+
+        $test_category_0 = $this->test_terms['categories'][0];
+        $test_category_1 = $this->test_terms['categories'][1];
+
+        // 期待するテキスト色は実際の関数から算出する（ハードコードの決め打ちを避ける）
+        $text_color_0 = VkTermColor::get_dynamic_text_color( $test_category_0['color'] );
+        $text_color_1 = VkTermColor::get_dynamic_text_color( $test_category_1['color'] );
+
+        // テストパターン
+        $tests = array(
+            // 通常呼び出し（ループ内・グローバルの投稿あり）：従来どおりの出力になること
+            array(
+                'data' => array(
+                    'post_title'    => 'Page In Loop',
+                    'post_content' => '<!-- wp:paragraph --><p>This is my page.</p><!-- /wp:paragraph -->',
+                    'post_type'     => 'post',
+                    'post_status'   => 'publish',
+                    'post_category' => array( $test_category_0['id'] ),
+                ),
+                'args'           => array( 'taxonomy' => 'category' ),
+                'call_param'     => '', // 第1引数は空のまま、グローバルの投稿を使う
+                'no_global_post' => false,
+                'correct'        => '<div><span class="btn btn-sm" style="color:' . $text_color_0 . ';background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] . '</span></div>',
+            ),
+            // 投稿IDを渡した場合：グローバルの投稿が無くても、渡したIDの投稿が正しく使われること
+            array(
+                'data' => array(
+                    'post_title'    => 'Page By Id',
+                    'post_content' => '<!-- wp:paragraph --><p>This is another page.</p><!-- /wp:paragraph -->',
+                    'post_type'     => 'post',
+                    'post_status'   => 'publish',
+                    'post_category' => array( $test_category_1['id'] ),
+                ),
+                'args'           => array( 'taxonomy' => 'category' ),
+                'call_param'     => 'own_id', // 作成した投稿のIDをそのまま渡す
+                'no_global_post' => true,
+                'correct'        => '<div><span class="btn btn-sm" style="color:' . $text_color_1 . ';background-color:' . $test_category_1['color'] . '">' . $test_category_1['name'] . '</span></div>',
+            ),
+            // グローバルの投稿が存在しない状態（ループ外・404ページ・検索結果0件等）で呼び出しても、
+            // 警告（Attempt to read property "ID" on null）を出さず、何も返さないこと（issue #31 の再現ケース）
+            array(
+                'data'           => null, // 投稿は作成しない
+                'args'           => array( 'taxonomy' => 'category' ),
+                'call_param'     => '',
+                'no_global_post' => true,
+                'correct'        => null,
+            ),
+            // 投稿IDを直接指定し、taxonomy を省略（自動検出）、グローバルの投稿が無い状態でも、
+            // 渡した投稿のタームが正しく自動検出されて出力されること（PR#37 CodeRabbit指摘の回帰テスト）
+            // get_the_taxonomies() は引数省略時にグローバルの投稿を見るため、正規化前の状態を参照すると
+            // 自動検出に失敗し、本来表示されるべきタームが何も表示されなくなる不具合があった.
+            array(
+                'data' => array(
+                    'post_title'    => 'Page By Id Auto Taxonomy',
+                    'post_content' => '<!-- wp:paragraph --><p>This is another page.</p><!-- /wp:paragraph -->',
+                    'post_type'     => 'post',
+                    'post_status'   => 'publish',
+                    'post_category' => array( $test_category_0['id'] ),
+                ),
+                'args'           => array(), // taxonomy 未指定 => 自動検出
+                'call_param'     => 'own_id',
+                'no_global_post' => true,
+                'correct'        => '<div><span class="btn btn-sm" style="color:' . $text_color_0 . ';background-color:' . $test_category_0['color'] . '">' . $test_category_0['name'] . '</span></div>',
+            ),
+        );
+
+        print PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+		print 'test_get_post_terms_html()' . PHP_EOL;
+		print '------------------------------------' . PHP_EOL;
+
+        global $post;
+        $backup_post = $post;
+
+        foreach ( $tests as $test ) {
+
+            $post_id = null;
+            if ( null !== $test['data'] ) {
+                $post_id = wp_insert_post( $test['data'] );
+            }
+
+            // グローバルの投稿を準備（ケースにより、無し / 作成した投稿）
+            if ( $test['no_global_post'] ) {
+                $post = null;
+            } else {
+                $post = get_post( $post_id );
+            }
+
+            // 第1引数（$post）を組み立て
+            $call_post = ( 'own_id' === $test['call_param'] ) ? $post_id : $test['call_param'];
+
+            $return = VkTermColor::get_post_terms_html( $call_post, $test['args'] );
+
+            print 'return  :' . PHP_EOL;
+            var_dump( $return );
+            print PHP_EOL;
+            print 'correct  :'. PHP_EOL;
+            var_dump( $test['correct'] );
+            print PHP_EOL;
+            $this->assertSame( $test['correct'], $return );
+        }
+
+        // 他のテストへグローバルの投稿を持ち越さない
+        $post = $backup_post;
+	}
+
    /**
-     * Test case get_single_term_with_color() 
+     * Test case get_single_term_with_color()
      *
      * @return void
      */
